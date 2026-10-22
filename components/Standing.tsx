@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { RATE_HISTORY_START, daysBetween, lastRateChangeDate, type EngineResult, type MonthRow } from "@/lib/engine";
-import { ELIGIBILITY, RATES, STANDING } from "@/lib/copy";
+import { ELIGIBILITY, PRIORITIES_COPY, RATES, STANDING } from "@/lib/copy";
 import { rateFreshness } from "@/lib/standing";
 import { formatDate, formatINR, formatMonth, formatPercent } from "@/lib/format";
 import type { FormValues } from "@/lib/wizard";
@@ -21,6 +21,8 @@ type Props = {
   notes?: string[];
   /** Today in India; turns on the stale-rate banner when the rate table is old. */
   asOf?: string;
+  /** Hands this invoice to the toolkit's Priorities tab (in memory). Shown when the invoice has a result. */
+  onAddToPriorities?: () => void;
 };
 
 // Presentational only: every number shown comes from compute() (CLAUDE.md rule 1).
@@ -92,7 +94,7 @@ function Working({ rows }: { rows: MonthRow[] }) {
   );
 }
 
-export function Standing({ result, form, onBack, onTone, onReset, notes = [], asOf }: Props) {
+export function Standing({ result, form, onBack, onTone, onReset, notes = [], asOf, onAddToPriorities }: Props) {
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => heading.current?.focus(), []);
   const r = STANDING.rows;
@@ -208,6 +210,11 @@ export function Standing({ result, form, onBack, onTone, onReset, notes = [], as
       </p>
       <div className="flex flex-col items-center gap-1.5">
         {actions}
+        {onAddToPriorities && (result.status === "overdue" || result.status === "not_yet_due") && (
+          <Button variant="secondary" onClick={onAddToPriorities} className="mt-1">
+            {PRIORITIES_COPY.addFromCheck}
+          </Button>
+        )}
         <Button variant="link" tone="muted" onClick={onBack} className="text-[15px] no-underline hover:underline">
           {STANDING.back}
         </Button>

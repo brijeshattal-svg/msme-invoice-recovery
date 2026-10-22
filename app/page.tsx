@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useReducer } from "react";
 import { Confirm } from "@/components/Confirm";
 import { SendScreen } from "@/components/Send";
@@ -7,6 +8,7 @@ import { Standing } from "@/components/Standing";
 import { Stepper } from "@/components/Stepper";
 import { ToneScreen } from "@/components/Tone";
 import { Upload } from "@/components/Upload";
+import { handOffInvoice, newId } from "@/components/toolkit/state";
 import { extractInvoice, ExtractFailure, requestDraft } from "@/lib/api";
 import { COPY } from "@/lib/copy";
 import { factsFromForm, getDraft } from "@/lib/email/flow";
@@ -19,6 +21,24 @@ import { initialState, reducer, sampleExtraction } from "@/lib/wizard";
 export default function Home() {
   // The whole journey lives in memory only: no localStorage, no cookies (CLAUDE.md rule 3).
   const [state, dispatch] = useReducer(reducer, initialState);
+  const router = useRouter();
+
+  // Only on the founder's click: pass this invoice (in memory) to the toolkit's Priorities tab.
+  function addToPriorities() {
+    const f = state.form;
+    handOffInvoice({
+      id: newId(),
+      client: f.clientName.trim(),
+      number: f.invoiceNumber.trim(),
+      amount: Number(f.amount),
+      invoiceDate: f.invoiceDate,
+      acceptanceDate: f.acceptanceDate,
+      agreementDays: f.hasAgreement ? Number(f.agreementDays) : null,
+      promisedDate: null,
+      paid: false,
+    });
+    router.push("/toolkit");
+  }
 
   async function handleFile(file: File) {
     dispatch({ type: "reading" });
@@ -82,6 +102,7 @@ export default function Home() {
           form={state.form}
           notes={eligibilityNotes(state.eligibility, state.form)}
           asOf={todayIST()}
+          onAddToPriorities={addToPriorities}
           onBack={() => dispatch({ type: "go", step: "check" })}
           onTone={() => dispatch({ type: "go", step: "tone" })}
           onReset={() => dispatch({ type: "reset" })}

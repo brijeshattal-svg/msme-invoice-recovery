@@ -1,18 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState, type KeyboardEvent } from "react";
-import { TOOLKIT } from "@/lib/copy";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { PRIORITIES_COPY, TOOLKIT } from "@/lib/copy";
 import { Help } from "../Help";
 import { cx } from "../ui/cx";
+import { Banner } from "../ui/Banner";
 import { BlockerAssistant } from "./BlockerAssistant";
+import { PriorityList } from "./PriorityList";
+import { clearHandOff, peekHandOff, ToolkitProvider } from "./state";
 
 type Tab = "blockers" | "priorities" | "cash";
 const TABS: Tab[] = ["blockers", "priorities", "cash"];
 
 /** /toolkit: three tools in tabs. All state lives in memory (SPRINT_PLAN.md section 1.2). */
 export function Toolkit() {
-  const [tab, setTab] = useState<Tab>("blockers");
+  // An invoice handed over from Quick Check opens the Priorities tab with that invoice in the list.
+  const [handoff] = useState(() => peekHandOff());
+  useEffect(() => clearHandOff(), []);
+  const [tab, setTab] = useState<Tab>(handoff ? "priorities" : "blockers");
   const refs = useRef<Record<Tab, HTMLButtonElement | null>>({ blockers: null, priorities: null, cash: null });
 
   // Arrow keys move between tabs (WAI-ARIA tabs pattern).
@@ -26,7 +32,7 @@ export function Toolkit() {
   };
 
   return (
-    <>
+    <ToolkitProvider initial={handoff ? [handoff] : []}>
       <header className="glass sticky top-0 z-20 border-b border-line">
         <div className="mx-auto flex h-14 max-w-3xl items-center gap-3 px-5">
           <Link href="/" className="flex items-center gap-2 whitespace-nowrap text-lg font-bold tracking-tight">
@@ -79,7 +85,12 @@ export function Toolkit() {
           <BlockerAssistant />
         </div>
         <div id="panel-priorities" role="tabpanel" aria-labelledby="tab-priorities" hidden={tab !== "priorities"}>
-          <p className="rounded-hero bg-surface p-6 text-center text-muted shadow-raised">{TOOLKIT.comingNext}</p>
+          {handoff && (
+            <Banner tone="info" size="sm" role="status" className="mb-5">
+              <p>{PRIORITIES_COPY.added}</p>
+            </Banner>
+          )}
+          <PriorityList />
         </div>
         <div id="panel-cash" role="tabpanel" aria-labelledby="tab-cash" hidden={tab !== "cash"}>
           <p className="rounded-hero bg-surface p-6 text-center text-muted shadow-raised">{TOOLKIT.comingNext}</p>
@@ -87,6 +98,6 @@ export function Toolkit() {
 
         <p className="mt-auto text-center text-sm text-muted">{TOOLKIT.notAdvice}</p>
       </main>
-    </>
+    </ToolkitProvider>
   );
 }
