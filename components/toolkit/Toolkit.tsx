@@ -7,6 +7,7 @@ import { Help } from "../Help";
 import { cx } from "../ui/cx";
 import { Banner } from "../ui/Banner";
 import { BlockerAssistant } from "./BlockerAssistant";
+import { CashForecast } from "./CashForecast";
 import { PriorityList } from "./PriorityList";
 import { clearHandOff, peekHandOff, ToolkitProvider } from "./state";
 
@@ -93,7 +94,7 @@ export function Toolkit() {
           <PriorityList />
         </div>
         <div id="panel-cash" role="tabpanel" aria-labelledby="tab-cash" hidden={tab !== "cash"}>
-          <p className="rounded-hero bg-surface p-6 text-center text-muted shadow-raised">{TOOLKIT.comingNext}</p>
+          <CashForecast />
         </div>
 
         <p className="mt-auto text-center text-sm text-muted">{TOOLKIT.notAdvice}</p>
