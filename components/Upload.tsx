@@ -32,7 +32,7 @@ export function Upload({ upload, error, onFile, onSample, onManual }: Props) {
 
   return (
     <section aria-labelledby="upload-h" className="flex flex-col gap-6">
-      <h2 id="upload-h" ref={heading} tabIndex={-1} className="text-2xl font-semibold leading-tight outline-none sm:text-3xl">
+      <h2 id="upload-h" ref={heading} tabIndex={-1} className="step-title outline-none">
         {COPY.headline}
       </h2>
 

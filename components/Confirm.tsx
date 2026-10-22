@@ -32,7 +32,7 @@ export function Confirm({ state, dispatch, onSubmit }: Props) {
   return (
     <form onSubmit={submit} noValidate aria-labelledby="check-h" className="flex flex-col gap-6">
       <div>
-        <h2 id="check-h" ref={heading} tabIndex={-1} className="text-2xl font-semibold outline-none">
+        <h2 id="check-h" ref={heading} tabIndex={-1} className="step-title outline-none">
           Check the details
         </h2>
         <p className="mt-1 text-base text-muted">

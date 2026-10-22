@@ -64,8 +64,8 @@
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
   --radius-input: 10px;
-  --radius-button: 14px;
-  --radius-card: 20px;
+  --radius-button: 999px;
+  --radius-card: 24px;
   --radius-hero: 28px;
 
   --shadow-card: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px rgb(0 0 0 / 0.06);
@@ -97,4 +97,33 @@
 body {
   background: var(--canvas);
   color: var(--ink);
+}
+
+/* Apple-style step title: large, tight, centred. */
+@utility step-title {
+  font-size: clamp(30px, 6vw, 44px);
+  line-height: 1.08;
+  font-weight: 700;
+  letter-spacing: -0.022em;
+  text-align: center;
+}
+
+/* Each screen rises in softly; off when motion is reduced. */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+main section[aria-labelledby] {
+  animation: rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  main section[aria-labelledby] { animation: none; }
+  * { transition: none !important; }
+}
+
+/* Glass header. */
+.glass {
+  background: color-mix(in srgb, var(--canvas) 78%, transparent);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
 }

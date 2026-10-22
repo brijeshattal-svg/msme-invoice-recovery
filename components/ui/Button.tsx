@@ -11,10 +11,10 @@ export type LinkTone = "brand" | "ink" | "muted";
 // want to change (weight, size, colour of links) are deliberately NOT in the base, because in
 // Tailwind two conflicting utilities resolve by stylesheet order, not by the order written.
 const base =
-  "inline-flex min-h-11 min-w-11 items-center justify-center gap-2 transition-colors disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex min-h-11 min-w-11 items-center justify-center gap-2 transition duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60";
 
 const variants: Record<ButtonVariant, string> = {
-  primary: "rounded-button bg-brand-700 text-base font-semibold text-on-brand hover:bg-brand-800",
+  primary: "rounded-button bg-brand-700 text-base font-semibold text-on-brand hover:bg-brand-800 hover:scale-[1.02]",
   secondary: "rounded-button border-2 border-brand-700 bg-surface text-base font-semibold text-link hover:bg-brand-50",
   ghost: "rounded-button text-base font-semibold text-ink hover:bg-brand-50",
   link: "rounded-input underline underline-offset-4",

@@ -103,7 +103,7 @@ export function SendScreen({ draft, facts, onEdit, onChangeTone, onBack }: Props
 
   return (
     <section aria-labelledby="send-h" className="flex flex-col gap-5">
-      <h2 id="send-h" ref={heading} tabIndex={-1} className="text-2xl font-semibold outline-none">
+      <h2 id="send-h" ref={heading} tabIndex={-1} className="step-title outline-none">
         {EMAIL.sendTitle}
       </h2>
 

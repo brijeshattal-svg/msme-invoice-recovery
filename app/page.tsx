@@ -55,10 +55,11 @@ export default function Home() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-8 px-4 py-8 sm:py-12">
+    <>
+      <Stepper current={state.step} />
+      <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-8 px-5 py-10 sm:py-16">
       {/* One page-level heading for assistive tech; each step's visible heading is an h2. */}
       <h1 className="sr-only">Overdue invoice check for service businesses</h1>
-      <Stepper current={state.step} />
 
       {state.step === "upload" && (
         <Upload
@@ -105,6 +106,7 @@ export default function Home() {
       )}
 
       <footer className="mt-auto text-sm text-muted">{COPY.disclaimer}</footer>
-    </main>
+      </main>
+    </>
   );
 }

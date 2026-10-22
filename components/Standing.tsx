@@ -174,7 +174,7 @@ export function Standing({ result, form, onBack, onTone, onReset }: Props) {
 
   return (
     <section aria-labelledby="standing-h" className="flex flex-col gap-6">
-      <h2 id="standing-h" ref={heading} tabIndex={-1} className="text-2xl font-semibold outline-none">
+      <h2 id="standing-h" ref={heading} tabIndex={-1} className="step-title outline-none">
         {STANDING.title}
       </h2>
       {body}

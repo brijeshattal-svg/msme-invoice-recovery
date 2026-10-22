@@ -1,31 +1,35 @@
+import { COPY } from "@/lib/copy";
 import { STEPS, type Step } from "@/lib/wizard";
-import { cx } from "./ui/cx";
 
-// Kept as-is in R1 (structure unchanged); R2 replaces it with ui/ProgressBar.
+/** Glass header: logo, "Step n of 5" and a thin progress hairline. */
 export function Stepper({ current }: { current: Step }) {
   const idx = STEPS.findIndex((s) => s.id === current);
+  const n = idx + 1;
+  const text = COPY.stepOf(n, STEPS.length);
   return (
-    <ol className="flex items-center justify-between gap-1 text-xs sm:text-sm" aria-label="Progress">
-      {STEPS.map((s, i) => {
-        const done = i < idx;
-        const active = i === idx;
-        return (
-          <li key={s.id} className="flex flex-1 flex-col items-center gap-1" aria-current={active ? "step" : undefined}>
-            <span
-              className={cx(
-                "num flex h-8 w-8 items-center justify-center rounded-full border-2 font-semibold",
-                done && "border-brand-700 bg-brand-700 text-on-brand",
-                active && "border-brand-700 bg-surface text-link",
-                !done && !active && "border-control text-muted",
-              )}
-            >
-              {done ? <span aria-hidden>✓</span> : i + 1}
-              {done && <span className="sr-only">completed</span>}
-            </span>
-            <span className={active ? "font-semibold" : "text-muted"}>{s.label}</span>
-          </li>
-        );
-      })}
-    </ol>
+    <header className="glass sticky top-0 z-20 border-b border-line">
+      <div className="mx-auto flex h-14 max-w-3xl items-center gap-3 px-5">
+        <span className="flex items-center gap-2 text-lg font-bold tracking-tight">
+          <span aria-hidden className="grid h-7 w-7 place-items-center rounded-lg bg-brand-700 text-xs font-extrabold text-on-brand">
+            45
+          </span>
+          FortyFive
+        </span>
+        <span className="num ml-auto text-sm text-muted" aria-live="polite">
+          {text}
+        </span>
+      </div>
+      <div
+        role="progressbar"
+        aria-label="Progress"
+        aria-valuemin={0}
+        aria-valuemax={STEPS.length}
+        aria-valuenow={n}
+        aria-valuetext={`${text}: ${STEPS[idx]?.label ?? ""}`}
+        className="h-0.5 bg-line"
+      >
+        <div className="h-full bg-brand-700 transition-[width] duration-500" style={{ width: `${(n / STEPS.length) * 100}%` }} />
+      </div>
+    </header>
   );
 }
