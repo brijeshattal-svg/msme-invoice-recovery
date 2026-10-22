@@ -1,0 +1,20 @@
+// User-facing strings. Kept in one place so legal wording can be reviewed in one read.
+export const COPY = {
+  headline: "Is your client paying you late? Find out what you're owed and what to say.",
+  privacy: "Your file is sent to an AI service to be read. We don't save it.",
+  disclaimer: "Not legal advice. Calculates and drafts; you decide what to send.",
+  reading: "Reading your invoice... about 10 seconds",
+  noInvoice: "No invoice found in this file. Please try another.",
+  pdfTooLarge: "That PDF is too large. Try a photo of it or a smaller export.",
+  imageTooLarge: "That photo is still too large after shrinking it. Try a smaller one.",
+  unsupported: "Please upload a PDF, JPEG or PNG file.",
+  heic: "HEIC photos aren't supported. Please take or export the photo as a JPEG or PNG.",
+  empty: "That file is empty. Please choose another.",
+  rateLimited: "Too many tries just now. Please wait a few minutes and try again, or enter the details by hand.",
+  aiFailed: "We couldn't read that invoice. You can try again or enter the details by hand.",
+  network: "We couldn't reach the server. Check your connection and try again, or enter the details by hand.",
+  agreementNote: "Terms printed on an invoice are not the same as a signed agreement.",
+  acceptanceHelp: "If they didn't object in writing within 15 days of delivery, use the delivery date.",
+  unreadable: "We couldn't read this",
+  pleaseCheck: "Please check",
+} as const;

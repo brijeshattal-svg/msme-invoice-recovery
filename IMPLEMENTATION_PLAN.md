@@ -11,7 +11,7 @@ Built from *MVP Scope: Overdue Invoice Recovery for Service MSEs* (21 Oct 2026).
 | RBI Bank Rate 5.75% from 7 Oct 2026 | Web-checked 22 Oct 2026 (repo 5.50%, MSF 5.75%, Bank Rate 5.75%; secondary sources plus RBI circular reproduced on taxguru.in) |
 | s.43B(h) 1961 = s.37(2)(g) 2025 | Web-checked (Rajya Sabha reply 21 Jul 2026 + commentary); enacted text not read (O3) |
 | Vercel request body limit 4.5 MB; function duration 300 s default on Hobby with fluid compute | Web-checked on Vercel docs. Re-check in your dashboard |
-| Anthropic API usage (`messages.parse`, `zodOutputFormat`, base64 `document` block) | From the bundled API reference, not memory |
+| Gemini SDK usage (`@google/genai`: `generateContent`, `inlineData`, JSON mode, `ApiError`, `FinishReason`) | Read from the installed package's type definitions. **Switched from Claude to Gemini by the project owner.** The default model id `gemini-3-flash-preview` comes from Google's Gemini 3 guide via search and is **not confirmed against a live key** (see section 3) |
 | Market statistics (73 days, 8.1 trillion, 0.2% TReDS) | In your doc with sources, **not re-verified here**. Re-read the source articles before they go on a slide |
 
 ## 1. Product in one paragraph
@@ -27,14 +27,14 @@ Browser (Next.js App Router, React, Tailwind)                     Vercel (Node r
 ┌─────────────────────────────────────────────┐                  ┌────────────────────────────┐
 │ Wizard state (useReducer, memory only)      │  multipart file  │ POST /api/extract          │
 │  1 Upload ─ client compress image ──────────┼─────────────────▶│  validate type/size        │
-│  2 Confirm ◀─────── ExtractedInvoice JSON ──┼◀─────────────────│  Claude vision -> zod JSON │
+│  2 Confirm ◀─────── ExtractedInvoice JSON ──┼◀─────────────────│  Gemini vision -> zod JSON │
 │  3 Standing: lib/engine (runs in browser)   │                  └──────────────┬─────────────┘
-│  4 Tone                                     │  confirmed INPUTS (not figures) │ Anthropic API
+│  4 Tone                                     │  confirmed INPUTS (not figures) │ Gemini API
 │  5 Draft ◀──────── {subject, body, checked}─┼─────────────────▶┌──────────────▼─────────────┐
 │     edit / copy / mailto                    │◀─────────────────│ POST /api/draft            │
 └─────────────────────────────────────────────┘                  │  re-run engine (authority) │
                                                                  │  build facts strings       │
-        lib/engine  (pure TS, shared, unit-tested)               │  Claude -> {subject, body} │
+        lib/engine  (pure TS, shared, unit-tested)               │  Gemini -> {subject, body} │
         lib/email/check.ts (pure TS, shared)                     │  number check, <=2 redrafts│
                                                                  │  else deterministic template│
                                                                  └────────────────────────────┘
@@ -52,13 +52,13 @@ Why this shape:
 | Part | Choice | Note |
 |---|---|---|
 | Framework | Next.js (App Router) + TypeScript, Tailwind | Vercel deploy per ForgeX |
-| AI SDK | `@anthropic-ai/sdk` + `zod` (`zodOutputFormat` from `@anthropic-ai/sdk/helpers/zod`) | |
-| Model | `process.env.ANTHROPIC_MODEL ?? "claude-opus-5-5"` | **[DECISION]** Default per the current API guidance. If extraction takes >15 s in testing, set `ANTHROPIC_MODEL=claude-sonnet-5-5` in Vercel (no code change). Opus 5.5 always thinks; set `output_config.effort` low for extraction |
+| AI SDK | `@google/genai` + `zod` | **[CHANGED]** Gemini instead of Claude, at the owner's choice. JSON mode + zod validation + one retry on malformed output; no server-side schema (untestable without a key) |
+| Model | `process.env.GEMINI_MODEL \|\| "gemini-3-flash-preview"` | **[OPEN]** Model ids change often and the default is unconfirmed. Verify once: `curl "https://generativelanguage.googleapis.com/v1beta/models?key=$GEMINI_API_KEY"`, then set `GEMINI_MODEL` in `.env.local` and Vercel. If extraction takes >15 s, try a lighter "flash" model |
 | Tests | Vitest for engine, number check, schema | |
-| Secrets | `ANTHROPIC_API_KEY` in Vercel env vars; `.env.local` gitignored; `.env.example` committed with empty value; never `NEXT_PUBLIC_*` | ForgeX rule |
+| Secrets | `GEMINI_API_KEY` in Vercel env vars; `.env.local` gitignored; `.env.example` committed with empty value; never `NEXT_PUBLIC_*` | ForgeX rule |
 | Dates | ISO strings + integer day numbers; no date library | removes timezone bugs |
 
-**[DECISION] Refusal fallbacks not enabled.** The API guide suggests server-side refusal fallbacks by default for this model. Skipped: it needs the beta endpoint and the parse helper's interaction is untested, invoices are an unlikely refusal trigger, and a refusal already falls through to manual entry / template. Add later if you see `stop_reason: "refusal"` in logs.
+**[DECISION] Blocked / truncated model answers are not retried.** A Gemini response with `promptFeedback.blockReason`, or a `finishReason` other than `STOP` (e.g. `SAFETY`, `MAX_TOKENS`), becomes `ai_failed` and the journey falls through to manual entry (extraction) or the template (email). Only malformed JSON is retried, once. Timeouts and 429s are never retried.
 
 ## 4. Repo layout
 
@@ -99,7 +99,7 @@ confidence: { clientName, invoiceNumber, invoiceDate, amountTotal, paymentTermsD
 
 ### 5.2 `POST /api/extract`
 
-`multipart/form-data` with `file` (PDF, JPEG, PNG; <= 4 MB; images are compressed client-side first). Success `200 {data: ExtractedInvoice}`. Errors: `400 not_supported`, `413 too_large`, `429 rate_limited`, `502 ai_failed` (client then opens manual entry). Server builds a base64 `document` block (PDF) or `image` block, plus the instruction text, and calls `client.messages.parse({ ..., output_config: { format: zodOutputFormat(ExtractedInvoiceSchema), effort: "low" } })`. If `parsed_output` is null or `stop_reason` is `refusal`/`max_tokens` -> `502`. Never log file content or extracted values.
+`multipart/form-data` with `file` (PDF, JPEG, PNG; <= 4 MB; images are compressed client-side first). Success `200 {data: ExtractedInvoice}`. Errors: `400 not_supported`, `413 too_large`, `429 rate_limited`, `502 ai_failed` (client then opens manual entry). Server sends the file as an `inlineData` part (PDF or image) before the instruction text part to `ai.models.generateContent` with `responseMimeType: "application/json"`, then parses with `JSON.parse` + `ExtractedInvoiceSchema.safeParse` (one retry on malformed output only). A blocked prompt, `finishReason` other than `STOP`, empty text or invalid JSON twice -> `502`. 429 from Gemini -> `429 rate_limited`. Magic bytes are checked so a mislabelled file is never forwarded. Never log file content or extracted values.
 
 ### 5.3 `POST /api/draft`
 
@@ -117,7 +117,7 @@ Each phase ends with a **gate** that must pass before moving on. Times follow yo
 
 | Phase | Scope | Slot | Gate (all must be true) |
 |---|---|---|---|
-| **P0 Scaffold** | `git init`, GitHub repo, Next.js + TS + Tailwind, Vitest, `.env.example`, `.gitignore` (env files), Vercel deploy, `ANTHROPIC_API_KEY` set in Vercel, health page | 9:00-10:30 | Live URL loads; `git log` shows commits; key not in repo (`git grep -n -E "sk-ant-[A-Za-z0-9_-]{20,}"` empty) |
+| **P0 Scaffold** | `git init`, GitHub repo, Next.js + TS + Tailwind, Vitest, `.env.example`, `.gitignore` (env files), Vercel deploy, `GEMINI_API_KEY` set in Vercel, health page | 9:00-10:30 | Live URL loads; `git log` shows commits; key not in repo (`git grep -n -E "sk-ant-[A-Za-z0-9_-]{20,}"` empty) |
 | **P1 Engine** (can run in a parallel session) | `lib/engine/*`, `lib/format.ts`, `tests/golden.test.ts` driven by `docs/golden-vectors.json` | 10:30-12:30, parallel to P2 | `npm test` passes all 13 vectors exactly (paise equal); no `new Date()` inside `lib/engine` (`grep`) |
 | **P2 Extract + Confirm** | `/api/extract`, client image compression, Upload screen, manual-entry fallback, Confirm screen with 3 facts, low-confidence highlighting, sample invoice button | 10:30-1:00 | Sample + 2 real PDFs extract correctly on the live URL; non-invoice file gets the right message; **push to GitHub by 1:00 PM (Submission 3)** |
 | **P3 Standing screen** | Wire engine; statuses (overdue / not yet due / udyam / history); month-by-month table with rate segments; capped-agreement note; Udyam caveat; "rates loaded to" line | 1:00-3:30 | Results for 3 golden cases equal the vectors on screen; every status renders its exact message; **O2 CalcGuru comparison done**, constants adjusted if needed |
@@ -155,7 +155,7 @@ Each phase ends with a **gate** that must pass before moving on. Times follow yo
 
 | Risk | Mitigation |
 |---|---|
-| Public endpoint with your API key can be abused | Size/type limits, best-effort per-IP limiter (`lib/ratelimit.ts`; in-memory so only best-effort on serverless), a **spend limit set in the Anthropic console**, and a Vercel Firewall rate-limit rule if your plan offers one (check) |
+| Public endpoint with your API key can be abused | Size/type limits, best-effort per-IP limiter (`lib/ratelimit.ts`; in-memory so only best-effort on serverless), a **spend cap / quota on the Gemini API key in Google AI Studio or Cloud console** (verify what your account offers), and a Vercel Firewall rate-limit rule if your plan offers one (check) |
 | Phone photos exceed Vercel's 4.5 MB body limit | Client-side resize to <=2000 px JPEG q~0.85; PDFs capped at 4 MB with a clear message |
 | Slow extraction hurts the 3-minute target | Measure in P2; drop to Sonnet via env var; show progress copy |
 | Model misreads a number | Confirm screen is mandatory; low-confidence highlight; nothing calculates until confirmed |

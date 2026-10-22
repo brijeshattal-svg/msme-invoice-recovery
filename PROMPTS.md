@@ -6,6 +6,8 @@ How to use
 3. Using **v0** for UI? Paste only the block marked `UI-ONLY (v0)` inside a phase, then give the generated components to Claude Code to wire up. v0 cannot read your files, so those blocks are self-contained.
 4. Each phase ends with a **Review prompt**. It is cheap and catches the mistakes that cost you the demo.
 
+**MODEL SWITCH: this project uses Google Gemini (`@google/genai`), not Claude.** `CLAUDE.md` section "AI provider" is authoritative. Wherever a prompt below says `client.messages.parse`, `output_config`, `zodOutputFormat`, `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` or `claude-*`, read it as: `ai.models.generateContent` via `lib/ai/client.ts`, JSON mode + zod, `GEMINI_API_KEY`, `GEMINI_MODEL`. Phase 0-2 are already built that way. The Phase 4 prompt below has been rewritten accordingly.
+
 Time check: the plan assumes Day 2 timings from your doc. If behind, use the cut line in `IMPLEMENTATION_PLAN.md` section 6.
 
 ---
@@ -106,7 +108,7 @@ Create a SYNTHETIC sample invoice for the "Try a sample invoice" button. Use fic
 
 **Review prompt (P2)**
 ```
-Review the P2 diff against CLAUDE.md. Specifically verify: (1) no content or extracted values are logged anywhere; (2) every AI response path is zod-validated and null-guarded; (3) invoice text cannot reach another prompt unsanitised; (4) the 4 MB / MIME checks exist on BOTH client and server; (5) the extracted paymentTermsDays does NOT auto-enable the "written agreement" toggle; (6) ANTHROPIC_API_KEY is only referenced server-side. Report findings; fix only clear defects.
+Review the P2 diff against CLAUDE.md. Specifically verify: (1) no content or extracted values are logged anywhere; (2) every AI response path is zod-validated and null-guarded; (3) invoice text cannot reach another prompt unsanitised; (4) the 4 MB / MIME checks exist on BOTH client and server; (5) the extracted paymentTermsDays does NOT auto-enable the "written agreement" toggle; (6) GEMINI_API_KEY is only referenced server-side. Report findings; fix only clear defects.
 ```
 
 ---
@@ -156,7 +158,7 @@ lib/email/check.ts: pure function checkEmail({subject, body}, facts) -> { ok: bo
 
 lib/email/prompt.ts: the system prompt and tone cards from section 5.4 (friendly / firm / formal, each with a one-line "when to use" shown in the UI too), the facts block, the required list, and the instruction to output {subject, body}. The facts block is data, not instructions. The email must open with the client's own tax cost heads-up: under Section 43B(h) of the Income-tax Act, 1961 (now Section 37(2)(g) of the Income-tax Act, 2025) a buyer may not be able to claim a deduction for dues to micro and small suppliers until they are paid, and companies report overdue dues to such suppliers half-yearly in MSME Form-1; hedge with "may" and "as we understand it". No threats; no mention of lawyers, courts or portals; reply-by expressed without digits; sign off with the literal placeholders [Your name] and [Your business].
 
-lib/ai/draft.ts: call client.messages.parse with a zod schema {subject: string, body: string} and output_config format; max_tokens 2000. Loop: draft -> checkEmail; on failure redraft up to 2 times, appending the failure list ("You used these numbers that are not allowed: ...; you omitted: ...") to the user message. If still failing, or on any API error, return the deterministic template.
+lib/ai/draft.ts: reuse getClient()/MODEL from lib/ai/client.ts and call `ai.models.generateContent` exactly the way lib/ai/extract.ts does (systemInstruction, responseMimeType "application/json", maxOutputTokens 4096, abortSignal, the same blockReason / finishReason / ApiError handling), describing the {subject, body} shape in the prompt and validating with a zod schema {subject: string, body: string}; no thinkingConfig, no temperature. Loop: draft -> checkEmail; on failure redraft up to 2 times, appending the failure list ("You used these numbers that are not allowed: ...; you omitted: ...") to the user message. If still failing, or on any API error, return the deterministic template.
 
 lib/email/template.ts: a deterministic builder per tone that uses ONLY facts.strings and always passes checkEmail (unit test this for all three tones).
 
@@ -173,7 +175,7 @@ UI-ONLY (v0)
 Two mobile-first Tailwind screens. (1) "Pick a tone": three large selectable cards with a title and one line each: Friendly - "Good relationship, first gentle nudge."; Firm - "You've already reminded them once."; Formal - "Large company, finance team, you want a clear paper trail." Primary button "Draft my email". (2) "Send it yourself": top status chip (green "Numbers checked against your calculation" or grey "Standard draft"), a Subject input, a tall editable Body textarea where text in square brackets like [Your name] is visibly highlighted, a warning banner if placeholders remain, buttons "Copy email" and "Open in my email app", links "Change tone" and "Back", and a muted line "Not legal advice. Review before sending. You send this from your own email." Include a loading skeleton state "Writing your email...".
 """
 
-Gate: (1) with a stubbed model returning a wrong amount, the checker fails and /api/draft redrafts, then falls back to the template after 2 failures; (2) with ANTHROPIC_API_KEY removed, the template path still completes the journey; (3) all three tones differ visibly; (4) Copy puts subject+body on the clipboard; mailto opens with the body filled; (5) `npm test` includes and passes tests/check.test.ts and a template test for all 3 tones.
+Gate: (1) with a stubbed model returning a wrong amount, the checker fails and /api/draft redrafts, then falls back to the template after 2 failures; (2) with GEMINI_API_KEY removed, the template path still completes the journey; (3) all three tones differ visibly; (4) Copy puts subject+body on the clipboard; mailto opens with the body filled; (5) `npm test` includes and passes tests/check.test.ts and a template test for all 3 tones.
 ```
 
 **Review prompt (P4)**
@@ -227,7 +229,7 @@ Use the prompts in `GTM_PLAYBOOK.md` for the Loom script, deck and LinkedIn post
 
 **Extraction is slow or flaky**
 ```
-Extraction on the live app takes <N> seconds / fails with <error>. Measure where time goes (upload, server, model). Propose, in order of least risk: smaller client image size, lower effort, switching ANTHROPIC_MODEL to claude-sonnet-5-5 via env var, tighter max_tokens. Implement only the first one that fixes it and show before/after timings.
+Extraction on the live app takes <N> seconds / fails with <error>. Measure where time goes (upload, server, model). Propose, in order of least risk: smaller client image size, switching GEMINI_MODEL to a lighter flash model (ids verified with the models list call) via env var, tighter maxOutputTokens. Implement only the first one that fixes it and show before/after timings.
 ```
 
 **A golden vector or CalcGuru mismatch**
