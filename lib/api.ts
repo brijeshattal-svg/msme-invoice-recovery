@@ -1,6 +1,7 @@
 import { COPY } from "./copy";
 import type { ExtractedInvoice } from "./ai/schemas";
 import type { DraftPayload, ServerDraft } from "./email/flow";
+import type { BlockerAnalysis } from "./blockers/types";
 
 export class ExtractFailure extends Error {}
 
@@ -40,4 +41,26 @@ export async function extractInvoice(file: File): Promise<ExtractedInvoice> {
   if (code === "not_supported") throw new ExtractFailure(COPY.unsupported);
   if (code === "empty") throw new ExtractFailure(COPY.empty);
   throw new ExtractFailure(COPY.aiFailed);
+}
+
+/** Browser -> POST /api/blocker. Returns the validated analysis, or the error kind for the UI. */
+export async function analyseReply(
+  reply: string,
+  context?: string,
+): Promise<{ ok: true; data: BlockerAnalysis } | { ok: false; error: "rate_limited" | "ai_failed" | "invalid_input" | "network" }> {
+  let res: Response;
+  try {
+    res = await fetch("/api/blocker", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reply, context: context || undefined }),
+    });
+  } catch {
+    return { ok: false, error: "network" };
+  }
+  const json = (await res.json().catch(() => ({}))) as { data?: BlockerAnalysis; error?: string };
+  if (res.ok && json.data) return { ok: true, data: json.data };
+  if (json.error === "rate_limited") return { ok: false, error: "rate_limited" };
+  if (json.error === "invalid_input" || json.error === "too_large") return { ok: false, error: "invalid_input" };
+  return { ok: false, error: "ai_failed" };
 }

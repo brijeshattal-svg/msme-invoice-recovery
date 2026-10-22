@@ -1,4 +1,5 @@
-import { COPY } from "@/lib/copy";
+import Link from "next/link";
+import { COPY, TOOLKIT } from "@/lib/copy";
 import { Help } from "./Help";
 import { STEPS, type Step } from "@/lib/wizard";
 
@@ -19,6 +20,9 @@ export function Stepper({ current }: { current: Step }) {
         <span className="num ml-auto whitespace-nowrap text-sm text-muted" aria-live="polite">
           {text}
         </span>
+        <Link href="/toolkit" className="min-h-11 content-center whitespace-nowrap rounded-full px-2 text-sm font-semibold text-link hover:bg-brand-50">
+          {TOOLKIT.title}
+        </Link>
         <Help />
       </div>
       <div

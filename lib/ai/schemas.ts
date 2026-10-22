@@ -23,3 +23,19 @@ export const ExtractedInvoiceSchema = z.object({
 
 export type ExtractedInvoice = z.infer<typeof ExtractedInvoiceSchema>;
 export type ConfidenceKey = keyof ExtractedInvoice["confidence"];
+
+/** SPRINT_PLAN.md section 2.2: the blocker classifier's raw answer. Validated again in lib/blockers/validate.ts. */
+export const BlockerClassificationSchema = z.object({
+  blockers: z
+    .array(
+      z.object({
+        type: z.string().max(40),
+        evidence: z.string().max(1000),
+        confidence: z.enum(["high", "medium", "low"]),
+      }),
+    )
+    .max(5),
+  promisedDate: z.string().max(20).nullable(),
+});
+
+export type BlockerClassification = z.infer<typeof BlockerClassificationSchema>;
