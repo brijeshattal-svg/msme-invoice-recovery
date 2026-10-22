@@ -53,7 +53,7 @@ Why this shape:
 |---|---|---|
 | Framework | Next.js (App Router) + TypeScript, Tailwind | Vercel deploy per ForgeX |
 | AI SDK | `@google/genai` + `zod` | **[CHANGED]** Gemini instead of Claude, at the owner's choice. JSON mode + zod validation + one retry on malformed output; no server-side schema (untestable without a key) |
-| Model | `process.env.GEMINI_MODEL \|\| "gemini-3-flash-preview"` | **[OPEN]** Model ids change often and the default is unconfirmed. Verify once: `curl "https://generativelanguage.googleapis.com/v1beta/models?key=$GEMINI_API_KEY"`, then set `GEMINI_MODEL` in `.env.local` and Vercel. If extraction takes >15 s, try a lighter "flash" model |
+| Model | `process.env.GEMINI_MODEL \|\| "gemini-3.5-flash"` | **[CHANGED 22 Oct 2026]** Default is `gemini-3.5-flash`, confirmed working with a live key; `gemini-3-flash-preview` was free-tier exhausted that day. Model ids change often, so re-verify: `curl "https://generativelanguage.googleapis.com/v1beta/models?key=$GEMINI_API_KEY"`, then set `GEMINI_MODEL` in `.env.local` and Vercel. If extraction takes >15 s, try a lighter "flash" model |
 | Tests | Vitest for engine, number check, schema | |
 | Secrets | `GEMINI_API_KEY` in Vercel env vars; `.env.local` gitignored; `.env.example` committed with empty value; never `NEXT_PUBLIC_*` | ForgeX rule |
 | Dates | ISO strings + integer day numbers; no date library | removes timezone bugs |

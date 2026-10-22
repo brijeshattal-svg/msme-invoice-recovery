@@ -2,7 +2,7 @@ import { GoogleGenAI } from "@google/genai";
 
 // Model ids change often. GEMINI_MODEL overrides the default without a code change.
 // `||` (not `??`) so an empty GEMINI_MODEL= line in .env falls back to the default.
-export const MODEL = process.env.GEMINI_MODEL || "gemini-3-flash-preview";
+export const MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash";
 
 let client: GoogleGenAI | null = null;
 
