@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { generateContent } = vi.hoisted(() => ({ generateContent: vi.fn() }));
-vi.mock("@/lib/ai/client", () => ({
+vi.mock("@/lib/ai/client", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/ai/client")>()),
   MODEL: "test-model",
+  getModels: () => ["test-model"],
   getClient: () => ({ models: { generateContent } }),
 }));
 

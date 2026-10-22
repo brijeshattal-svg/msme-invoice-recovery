@@ -1,12 +1,16 @@
 import { ApiError, FinishReason } from "@google/genai";
-import { getClient, MODEL } from "./client";
+import { getClient, getModels, SWITCH_STATUSES } from "./client";
 import { normalizeExtraction } from "./normalize";
 import { ExtractedInvoiceSchema, type ExtractedInvoice } from "./schemas";
 import type { AllowedMime } from "@/lib/limits";
 
 export class ExtractionError extends Error {
-  // "bad_output" = the model answered but not with valid JSON in our shape; the only retryable kind.
-  constructor(public kind: "rate_limited" | "ai_failed" | "bad_output") {
+  // "bad_output" = the model answered but not with valid JSON in our shape; retried on the same model.
+  // "switchable" = this model is out of quota, busy or gone: the next model in the chain may work.
+  constructor(
+    public kind: "rate_limited" | "ai_failed" | "bad_output",
+    public switchable = false,
+  ) {
     super(kind);
   }
 }
@@ -27,13 +31,15 @@ Return exactly this JSON shape, with every key present:
 
 const USER_PROMPT = "Extract the invoice fields from the attached file. Return only the JSON object.";
 
-const TIMEOUT_MS = 50_000; // under the route's maxDuration of 60 s
+const TIMEOUT_MS = 50_000; // one call, under the route's maxDuration of 60 s
+const BUDGET_MS = 55_000; // all models and retries together
+const MIN_CALL_MS = 5_000; // not worth starting another model with less time than this
 
-async function callModel(base64: string, mimeType: AllowedMime): Promise<ExtractedInvoice> {
+async function callModel(model: string, base64: string, mimeType: AllowedMime, timeoutMs: number): Promise<ExtractedInvoice> {
   let res;
   try {
     res = await getClient().models.generateContent({
-      model: MODEL,
+      model,
       // The file part goes BEFORE the text part.
       contents: [
         { role: "user", parts: [{ inlineData: { mimeType, data: base64 } }, { text: USER_PROMPT }] },
@@ -43,12 +49,15 @@ async function callModel(base64: string, mimeType: AllowedMime): Promise<Extract
         responseMimeType: "application/json",
         // Higher than the 4000 in the plan: thinking models may count reasoning tokens in this limit.
         maxOutputTokens: 8192,
-        abortSignal: AbortSignal.timeout(TIMEOUT_MS),
+        abortSignal: AbortSignal.timeout(timeoutMs),
       },
     });
   } catch (e) {
-    if (e instanceof ApiError && e.status === 429) throw new ExtractionError("rate_limited");
-    throw new ExtractionError("ai_failed");
+    // Status only, never the file or the fields (CLAUDE.md rule 3).
+    const status = e instanceof ApiError ? e.status : undefined;
+    console.info(`extract model_error status=${status ?? (e instanceof Error ? e.name : "unknown")} model=${model}`);
+    const switchable = status !== undefined && SWITCH_STATUSES.includes(status);
+    throw new ExtractionError(status === 429 ? "rate_limited" : "ai_failed", switchable);
   }
 
   if (res.promptFeedback?.blockReason) throw new ExtractionError("ai_failed");
@@ -68,24 +77,44 @@ async function callModel(base64: string, mimeType: AllowedMime): Promise<Extract
   return parsed.data;
 }
 
-/**
- * Reads an invoice. Retries once, and only for a malformed answer: never after a timeout
- * (two 50 s attempts would exceed the route's 60 s limit) or a rate limit.
- * Throws ExtractionError of kind "rate_limited" or "ai_failed".
- */
-export async function extractInvoice(bytes: Buffer, mimeType: AllowedMime): Promise<ExtractedInvoice> {
-  const base64 = bytes.toString("base64");
-  let raw: ExtractedInvoice;
+/** One model: retries once, and only for a malformed answer (never after a timeout or a rate limit). */
+async function readWithModel(model: string, base64: string, mimeType: AllowedMime, deadline: number): Promise<ExtractedInvoice> {
+  const timeout = () => Math.max(1_000, Math.min(TIMEOUT_MS, deadline - Date.now() - 1_000));
   try {
-    raw = await callModel(base64, mimeType);
+    return await callModel(model, base64, mimeType, timeout());
   } catch (e) {
     if (!(e instanceof ExtractionError) || e.kind !== "bad_output") throw e;
     try {
-      raw = await callModel(base64, mimeType);
+      return await callModel(model, base64, mimeType, timeout());
     } catch (e2) {
       if (e2 instanceof ExtractionError && e2.kind === "bad_output") throw new ExtractionError("ai_failed");
       throw e2;
     }
   }
-  return normalizeExtraction(raw);
+}
+
+/**
+ * Reads an invoice, trying each model in order (primary first) when one is out of quota (429),
+ * busy (503/500/504) or gone (404). Timeouts, blocked content and bad answers do NOT move on,
+ * because another model would not fix them and the route has a 60 s limit.
+ * Throws ExtractionError "rate_limited" only if every model was rate limited, otherwise "ai_failed".
+ */
+export async function extractInvoice(bytes: Buffer, mimeType: AllowedMime): Promise<ExtractedInvoice> {
+  const base64 = bytes.toString("base64");
+  const models = getModels();
+  const deadline = Date.now() + BUDGET_MS;
+  let tried = 0;
+  let rateLimited = 0;
+
+  for (const model of models) {
+    if (tried > 0 && deadline - Date.now() < MIN_CALL_MS) break;
+    tried++;
+    try {
+      return normalizeExtraction(await readWithModel(model, base64, mimeType, deadline));
+    } catch (e) {
+      if (!(e instanceof ExtractionError) || !e.switchable) throw e;
+      if (e.kind === "rate_limited") rateLimited++;
+    }
+  }
+  throw new ExtractionError(rateLimited === tried ? "rate_limited" : "ai_failed");
 }

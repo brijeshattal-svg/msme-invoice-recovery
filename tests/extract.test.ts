@@ -1,9 +1,11 @@
 import { ApiError } from "@google/genai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const generateContent = vi.fn();
-vi.mock("@/lib/ai/client", () => ({
+const { generateContent, chain } = vi.hoisted(() => ({ generateContent: vi.fn(), chain: { models: ["test-model"] } }));
+vi.mock("@/lib/ai/client", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/ai/client")>()),
   MODEL: "test-model",
+  getModels: () => chain.models,
   getClient: () => ({ models: { generateContent } }),
 }));
 
@@ -29,6 +31,7 @@ const bytes = Buffer.from("%PDF-1.4 fake");
 // Braces matter: returning the mock from beforeEach makes vitest call it as a cleanup hook.
 beforeEach(() => {
   generateContent.mockReset();
+  chain.models = ["test-model"];
 });
 
 describe("extractInvoice", () => {
@@ -87,5 +90,99 @@ describe("extractInvoice", () => {
       await expect(extractInvoice(bytes, "image/png")).rejects.toMatchObject({ kind: "ai_failed" });
       expect(generateContent).toHaveBeenCalledTimes(1);
     }
+  });
+});
+
+describe("extractInvoice: model chain (fallback on 429, 503, 404)", () => {
+  const api = (status: number) => new ApiError({ message: "x", status });
+  const modelsCalled = () => generateContent.mock.calls.map((c) => c[0].model);
+  beforeEach(() => {
+    chain.models = ["primary", "second", "third"];
+  });
+
+  it("uses only the primary when it works", async () => {
+    generateContent.mockResolvedValue(reply(JSON.stringify(valid)));
+    await extractInvoice(bytes, "application/pdf");
+    expect(modelsCalled()).toEqual(["primary"]);
+  });
+
+  it.each([
+    ["429 out of quota", 429],
+    ["503 busy", 503],
+    ["500 error", 500],
+    ["504 gateway timeout", 504],
+    ["404 model gone", 404],
+  ])("moves to the next model after %s", async (_n, status) => {
+    generateContent.mockRejectedValueOnce(api(status)).mockResolvedValueOnce(reply(JSON.stringify(valid)));
+    expect(await extractInvoice(bytes, "image/png")).toMatchObject({ clientName: "Acme" });
+    expect(modelsCalled()).toEqual(["primary", "second"]);
+  });
+
+  it("walks the whole chain and stops at the first model that works", async () => {
+    generateContent
+      .mockRejectedValueOnce(api(429))
+      .mockRejectedValueOnce(api(503))
+      .mockResolvedValueOnce(reply(JSON.stringify(valid)));
+    await extractInvoice(bytes, "image/png");
+    expect(modelsCalled()).toEqual(["primary", "second", "third"]);
+  });
+
+  it("reports rate_limited only when EVERY model was rate limited", async () => {
+    generateContent.mockRejectedValue(api(429));
+    await expect(extractInvoice(bytes, "image/png")).rejects.toMatchObject({ kind: "rate_limited" });
+    expect(modelsCalled()).toEqual(["primary", "second", "third"]);
+  });
+
+  it("reports ai_failed when the failures are a mix of quota and outages", async () => {
+    generateContent.mockRejectedValueOnce(api(429)).mockRejectedValueOnce(api(503)).mockRejectedValueOnce(api(429));
+    await expect(extractInvoice(bytes, "image/png")).rejects.toMatchObject({ kind: "ai_failed" });
+  });
+
+  it.each([
+    ["a timeout", () => Object.assign(new Error("The operation was aborted due to timeout"), { name: "TimeoutError" })],
+    ["a 400 bad request", () => api(400)],
+    ["a 401 bad key", () => api(401)],
+  ])("does NOT switch models after %s (another model would not fix it)", async (_n, make) => {
+    generateContent.mockRejectedValue(make());
+    await expect(extractInvoice(bytes, "image/png")).rejects.toMatchObject({ kind: "ai_failed" });
+    expect(modelsCalled()).toEqual(["primary"]);
+  });
+
+  it("does NOT switch for blocked or truncated answers", async () => {
+    generateContent.mockResolvedValue(reply(JSON.stringify(valid), "SAFETY"));
+    await expect(extractInvoice(bytes, "image/png")).rejects.toMatchObject({ kind: "ai_failed" });
+    expect(modelsCalled()).toEqual(["primary"]);
+  });
+
+  it("retries a malformed answer on the SAME model before anything else", async () => {
+    generateContent.mockResolvedValueOnce(reply("not json")).mockResolvedValueOnce(reply(JSON.stringify(valid)));
+    await extractInvoice(bytes, "image/png");
+    expect(modelsCalled()).toEqual(["primary", "primary"]);
+  });
+
+  it("a model that 429s after a malformed answer still hands over to the next model", async () => {
+    generateContent
+      .mockResolvedValueOnce(reply("not json"))
+      .mockRejectedValueOnce(api(429))
+      .mockResolvedValueOnce(reply(JSON.stringify(valid)));
+    await extractInvoice(bytes, "image/png");
+    expect(modelsCalled()).toEqual(["primary", "primary", "second"]);
+  });
+
+  it("with a single configured model, a 429 is reported as rate_limited after one call", async () => {
+    chain.models = ["only"];
+    generateContent.mockRejectedValue(api(429));
+    await expect(extractInvoice(bytes, "image/png")).rejects.toMatchObject({ kind: "rate_limited" });
+    expect(generateContent).toHaveBeenCalledTimes(1);
+  });
+
+  it("logs the model and status but never the file", async () => {
+    const spy = vi.spyOn(console, "info").mockImplementation(() => {});
+    generateContent.mockRejectedValueOnce(api(429)).mockResolvedValueOnce(reply(JSON.stringify(valid)));
+    await extractInvoice(Buffer.from("%PDF-SECRET-BYTES"), "application/pdf");
+    const logged = spy.mock.calls.flat().join("\n");
+    expect(logged).toContain("extract model_error status=429 model=primary");
+    expect(logged).not.toContain("SECRET");
+    spy.mockRestore();
   });
 });

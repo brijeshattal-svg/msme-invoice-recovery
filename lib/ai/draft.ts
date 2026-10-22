@@ -5,7 +5,7 @@ import type { Facts } from "@/lib/email/facts";
 import { buildDraftPrompt, DRAFT_SYSTEM_PROMPT, feedbackFrom } from "@/lib/email/prompt";
 import { buildTemplate } from "@/lib/email/template";
 import type { Tone } from "@/lib/email/tones";
-import { getClient, MODEL } from "./client";
+import { getClient, getModels, SWITCH_STATUSES } from "./client";
 
 export type DraftResult = Email & { source: "ai" | "template"; redrafts: number };
 
@@ -41,11 +41,11 @@ function sanitize(e: Email): Email {
   };
 }
 
-async function callOnce(prompt: string, timeoutMs: number, capThinking: boolean): Promise<Email> {
+async function callOnce(model: string, prompt: string, timeoutMs: number, capThinking: boolean): Promise<Email> {
   let res;
   try {
     res = await getClient().models.generateContent({
-      model: MODEL,
+      model,
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       config: {
         systemInstruction: DRAFT_SYSTEM_PROMPT,
@@ -61,7 +61,7 @@ async function callOnce(prompt: string, timeoutMs: number, capThinking: boolean)
     });
   } catch (e) {
     // Log the HTTP status or error name only: never the prompt, the facts or the email (CLAUDE.md rule 3).
-    console.info(`draft model_error ${e instanceof ApiError ? `status=${e.status}` : `name=${e instanceof Error ? e.name : "unknown"}`}`);
+    console.info(`draft model_error ${e instanceof ApiError ? `status=${e.status}` : `name=${e instanceof Error ? e.name : "unknown"}`} model=${model}`);
     // A busy model (503 and friends) is worth a short retry; 429s, timeouts and a missing key are not.
     const status = e instanceof ApiError ? e.status : undefined;
     throw new CallError("api", status !== undefined && TRANSIENT_STATUSES.includes(status), status);
@@ -107,6 +107,8 @@ export async function draftEmail(
   let attempts = 0;
   let transientRetries = 0;
   let capThinking = true; // dropped for the rest of this request if the model rejects the setting
+  const models = getModels();
+  let modelIdx = 0; // advances when a model is out of quota, busy or gone
 
   while (attempts < MAX_ATTEMPTS) {
     const remaining = BUDGET_MS - (now() - started);
@@ -114,7 +116,7 @@ export async function draftEmail(
     attempts++;
     let draft: Email;
     try {
-      draft = await callOnce(buildDraftPrompt(facts, tone, feedback), Math.min(PER_CALL_MS, remaining - 2_000), capThinking);
+      draft = await callOnce(models[modelIdx], buildDraftPrompt(facts, tone, feedback), Math.min(PER_CALL_MS, remaining - 2_000), capThinking);
     } catch (e) {
       if (e instanceof CallError && e.status === 400 && capThinking) {
         capThinking = false; // a model without thinking support rejects thinkingConfig: retry plainly, once
@@ -123,6 +125,14 @@ export async function draftEmail(
       }
       if (e instanceof CallError && e.kind === "bad_output") {
         feedback = 'Your previous answer was not a valid JSON object of the form {"subject": string, "body": string}.';
+        continue;
+      }
+      if (e instanceof CallError && e.status !== undefined && SWITCH_STATUSES.includes(e.status) && modelIdx < models.length - 1) {
+        // Out of quota (429), busy (503/500/504) or gone (404): the next model may work, so go straight there.
+        console.info(`draft model_switch to=${models[modelIdx + 1]}`);
+        modelIdx++;
+        transientRetries = 0;
+        attempts--; // no draft was produced, so this does not use up a redraft
         continue;
       }
       if (e instanceof CallError && e.transient && transientRetries < MAX_TRANSIENT_RETRIES) {
