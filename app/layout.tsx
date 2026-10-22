@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Overdue invoice check for service MSEs",
   description:
-    "See whether a client's invoice is legally late, the interest owed, and a polite email to send yourself.",
+    "See whether a client's invoice may be late under the MSMED Act, the interest that may be owed, and a polite email to send yourself.",
   // A hackathon demo, not a public site: keep it out of search results (also sent as a header).
   robots: { index: false, follow: false },
 };

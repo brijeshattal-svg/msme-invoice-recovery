@@ -94,6 +94,11 @@ export function SendScreen({ draft, facts, onEdit, onChangeTone, onBack }: Props
     if (truncated) setToast((await copyText()) ? EMAIL.draftLong : EMAIL.copyFailed);
     else if (hasPlaceholders) setToast(EMAIL.placeholderWarning);
     window.location.href = href;
+    // A mailto: link does nothing visible when the device has no mail app. If this tab still has
+    // focus a moment later, nothing took over, so say what to do instead.
+    setTimeout(() => {
+      if (document.visibilityState === "visible" && document.hasFocus()) setToast(EMAIL.noMailApp);
+    }, 1500);
   }
 
   return (

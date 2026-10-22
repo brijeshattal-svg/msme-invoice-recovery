@@ -71,7 +71,7 @@ export function Confirm({ state, dispatch, onSubmit }: Props) {
       <fieldset className="flex flex-col gap-6 rounded-card border-2 border-line p-4">
         <legend className="px-2 text-lg font-semibold">Three things only you know</legend>
 
-        <Field id="f-udyamDate" label="Your Udyam registration date" error={errors.udyamDate}>
+        <Field id="f-udyamDate" label="Your Udyam registration date" help={COPY.udyamHelp} error={errors.udyamDate}>
           {(cls, d) => <input id="f-udyamDate" type="date" max={today} className={`${cls} num`} aria-describedby={d} aria-invalid={!!errors.udyamDate} value={form.udyamDate} onChange={set("udyamDate")} />}
         </Field>
 
@@ -107,7 +107,7 @@ export function Confirm({ state, dispatch, onSubmit }: Props) {
 
       <div className="flex flex-col gap-3">
         <Button type="submit" size="lg">
-          Check what I&apos;m owed
+          Check what I may be owed
         </Button>
         <Button variant="link" tone="ink" onClick={() => dispatch({ type: "go", step: "upload" })} className="self-start text-base">
           Back

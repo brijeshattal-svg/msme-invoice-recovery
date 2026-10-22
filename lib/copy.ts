@@ -1,7 +1,7 @@
 // User-facing strings. Kept in one place so legal wording can be reviewed in one read.
 export const COPY = {
-  headline: "Is your client paying you late? Find out what you're owed and what to say.",
-  privacy: "Your file is sent to an AI service to be read. We don't save it.",
+  headline: "Is your client paying you late? See what you may be owed and what to say.",
+  privacy: "Your file is sent to an AI service to be read. This app doesn't save it.",
   disclaimer: "Not legal advice. Calculates and drafts; you decide what to send.",
   reading: "Reading your invoice... about 10 seconds",
   noInvoice: "No invoice found in this file. Please try another.",
@@ -13,7 +13,9 @@ export const COPY = {
   rateLimited: "Too many tries just now. Please wait a few minutes and try again, or enter the details by hand.",
   aiFailed: "We couldn't read that invoice. You can try again or enter the details by hand.",
   network: "We couldn't reach the server. Check your connection and try again, or enter the details by hand.",
-  agreementNote: "Terms printed on an invoice are not the same as a signed agreement.",
+  agreementNote:
+    "Terms printed on an invoice are not the same as a signed agreement. Choose Yes only if you and your client agreed the days in writing; otherwise the 15-day rule applies.",
+  udyamHelp: "Find it on your Udyam registration certificate (the date of registration).",
   acceptanceHelp: "If they didn't object in writing within 15 days of delivery, use the delivery date.",
   unreadable: "We couldn't read this",
   pleaseCheck: "Please check",
@@ -35,14 +37,15 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
 
 export const STANDING = {
   title: "Where you stand",
-  figuresNote: "Figures are based on the details you entered. We have not verified them.",
+  figuresNote:
+    "Figures are based on the details you entered. We have not verified them. The MSMED Act's payment rules cover micro and small enterprises only, not medium enterprises or traders.",
   notAdvice: "Not legal advice.",
   back: "Back",
   chooseTone: "Choose a tone",
   checkAnother: "Check another invoice",
 
   // overdue
-  interestSuffix: "interest owed so far", // follows the big interest amount
+  interestSuffix: "interest may be owed so far", // follows the big interest amount
   totalNowDueLine: (total: string) => `Total now due ${total}`,
   legalLine:
     "Under Section 16 of the MSMED Act, 2006, interest may be owed on a payment that is late beyond its due date.",
@@ -101,6 +104,7 @@ export const EMAIL = {
   back: "Back",
   copied: "Copied. Paste it into your email.",
   copiedWithPlaceholders: "Copied. Remember to replace the highlighted parts first.",
+  noMailApp: "If no email app opened, you may not have one set up on this device. Use Copy email and paste it into your own email.",
   copyFailed: "Couldn't copy automatically. Select the text and copy it yourself.",
   draftLong: "Draft is long. We copied it, paste it into your email.",
   placeholderWarning: "Replace the highlighted parts, like [Your name], before you send.",

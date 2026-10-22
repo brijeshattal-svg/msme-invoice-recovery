@@ -53,7 +53,7 @@ describe("Standing screen: figures on screen equal the golden vectors", () => {
   it.each(overdue.map((v) => [v.id, v] as const))("%s: headline, summary and every month", (_id, v) => {
     const e = v.expected as Extract<EngineResult, { status: "overdue" }>;
     const t = screenText(v);
-    expect(t).toContain(`${formatINR(e.totalInterest)} interest owed so far`);
+    expect(t).toContain(`${formatINR(e.totalInterest)} interest may be owed so far`);
     expect(t).toContain(`Total now due ${formatINR(e.totalDue)}`);
     expect(t).toContain(`Payment was due by ${formatDate(e.lastPayableDate)}`);
     expect(t).toContain(`Interest runs from ${formatDate(e.interestStartDate)}`);
@@ -80,13 +80,13 @@ describe("Standing screen: figures on screen equal the golden vectors", () => {
 
   it("multi-month-compounding totals match to the paisa", () => {
     const t = screenText(byId("multi-month-compounding"));
-    expect(t).toContain("₹47,228.01 interest owed so far");
+    expect(t).toContain("₹47,228.01 interest may be owed so far");
     expect(t).toContain("₹5,47,228.01");
   });
 
   it("agreement-60-capped-to-45 shows the cap note with the agreed days", () => {
     const t = screenText(byId("agreement-60-capped-to-45"));
-    expect(t).toContain("₹3,114.81 interest owed so far");
+    expect(t).toContain("₹3,114.81 interest may be owed so far");
     expect(t).toContain("₹1,23,114.81");
     expect(t).toContain("Your agreement says 60 days. The law caps this at 45, so we used 45.");
   });
@@ -112,7 +112,7 @@ describe("Standing screen: the other statuses", () => {
     expect(ten).toContain("10 days left.");
     expect(ten).toContain("Check another invoice");
     expect(ten).not.toContain("Choose a tone");
-    expect(ten).not.toContain("interest owed so far");
+    expect(ten).not.toContain("interest may be owed so far");
 
     expect(screenText(byId("last-payable-day-is-today"))).toContain("Today is the last day to pay.");
   });
