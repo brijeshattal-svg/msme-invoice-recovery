@@ -198,17 +198,3 @@ label:has(input:checked) .tone-title::after {
   content: "  ✓";
   color: var(--brand-700);
 }
-
-/* Workspace (the side tools: /toolkit, /blockers, /priorities, /cash, /reports) uses an indigo
-   accent. Re-pointing the tokens here re-themes every shared component inside, without touching
-   Quick Check. Contrast (WCAG AA, computed): white on --brand-700 7.1:1; --brand-800 on --brand-50 9.4:1;
-   --link on white 7.1:1; --muted on this canvas 5.9:1; sidebar text on navy 11.6:1. */
-.ws-theme {
-  --canvas: #f4f6fb;
-  --brand-50: #eef0ff;
-  --brand-600: #4f5df0;
-  --brand-700: #3d47c9;
-  --brand-800: #2b338f;
-  --link: #3d47c9;
-  background: var(--canvas);
-}

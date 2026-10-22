@@ -84,17 +84,17 @@ export function Dashboard() {
       )}
 
       <section aria-label="Summary" className="grid gap-4 lg:grid-cols-3">
-        <div className="relative overflow-hidden rounded-hero bg-[#1b2350] p-6 text-white shadow-raised">
-          <span aria-hidden className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/5" />
-          <p className="text-xs font-semibold uppercase tracking-wider text-[#b7c0f0]">{C.heroLabel}</p>
+        <div className="relative overflow-hidden rounded-hero bg-brand-800 p-6 text-white shadow-raised">
+          <span aria-hidden className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10" />
+          <p className="text-xs font-semibold uppercase tracking-wider text-white/80">{C.heroLabel}</p>
           <p className="num mt-2 text-4xl font-bold tracking-tight">{formatINR(s.overdue)}</p>
           {s.overdueCount > 0 ? (
             <>
               <span className="mt-3 inline-block rounded-full bg-[#ffe7b3] px-3 py-1 text-xs font-bold text-[#5c3a00]">{C.heroChip(s.overdueCount)}</span>
-              <p className="num mt-3 text-sm text-[#b7c0f0]">{C.heroInterest(formatINR(s.interestMayBeOwed))}</p>
+              <p className="num mt-3 text-sm text-white/80">{C.heroInterest(formatINR(s.interestMayBeOwed))}</p>
             </>
           ) : (
-            <p className="mt-3 text-sm text-[#b7c0f0]">{C.heroNone}</p>
+            <p className="mt-3 text-sm text-white/80">{C.heroNone}</p>
           )}
         </div>
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:col-span-2">

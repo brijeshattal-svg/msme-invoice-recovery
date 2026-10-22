@@ -49,7 +49,6 @@ describe("workspace pages", () => {
     expect(html).toContain('href="/"');
     expect(html).toContain(TOOLKIT.newCheck);
     expect(html).toContain(TOOLKIT.memoryNote);
-    expect(html).toContain("ws-theme");
   });
 
   it("the sidebar groups the tools under Collect, Plan and Reports", () => {

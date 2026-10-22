@@ -38,7 +38,7 @@ function Logo({ light = false }: { light?: boolean }) {
 
 /**
  * The workspace for the side tools: navy sidebar with grouped sections on desktop, a bottom tab bar
- * on phones, and a top bar. Indigo accent via .ws-theme. Quick Check (the main product, at /) is
+ * on phones, and a top bar, in the same light, green design as Quick Check. Quick Check (the main product, at /) is
  * always one click away and is not part of this shell.
  */
 export function ToolsShell({ children }: { children: ReactNode }) {
@@ -47,10 +47,10 @@ export function ToolsShell({ children }: { children: ReactNode }) {
   const allIds = TOOLKIT.sections.flatMap((s) => s.items) as ToolId[];
 
   return (
-    <div className="ws-theme flex min-h-screen w-full text-ink">
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col bg-[#0f1530] px-4 py-5 text-[#c9cfe8] lg:flex" aria-label={TOOLKIT.workspace}>
+    <div className="flex min-h-screen w-full text-ink">
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-line bg-surface px-4 py-5 text-ink lg:flex" aria-label={TOOLKIT.workspace}>
         <div className="px-2">
-          <Logo light />
+          <Logo />
         </div>
         <Link
           href="/"
@@ -62,7 +62,7 @@ export function ToolsShell({ children }: { children: ReactNode }) {
         <nav aria-label={TOOLKIT.navLabel} className="mt-6 flex flex-col gap-5 overflow-y-auto">
           {TOOLKIT.sections.map((section, i) => (
             <div key={i}>
-              {section.label && <p className="mb-1.5 px-3 text-xs font-semibold uppercase tracking-wider text-[#8a93bd]">{section.label}</p>}
+              {section.label && <p className="mb-1.5 px-3 section-label">{section.label}</p>}
               <ul className="flex flex-col gap-0.5">
                 {(section.items as readonly ToolId[]).map((id) => (
                   <li key={id}>
@@ -71,7 +71,7 @@ export function ToolsShell({ children }: { children: ReactNode }) {
                       aria-current={isCurrent(id) ? "page" : undefined}
                       className={cx(
                         "flex min-h-11 items-center gap-3 rounded-xl px-3 text-[15px] font-medium transition-colors",
-                        isCurrent(id) ? "bg-[#2a3370] text-white" : "hover:bg-white/10 hover:text-white",
+                        isCurrent(id) ? "bg-brand-50 text-brand-800" : "text-muted hover:bg-brand-50 hover:text-ink",
                       )}
                     >
                       <Icon name={id} />
@@ -83,7 +83,7 @@ export function ToolsShell({ children }: { children: ReactNode }) {
             </div>
           ))}
         </nav>
-        <p className="mt-auto px-2 pt-4 text-xs leading-5 text-[#8a93bd]">{TOOLKIT.memoryNote}</p>
+        <p className="mt-auto px-2 pt-4 text-xs leading-5 text-muted">{TOOLKIT.memoryNote}</p>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
