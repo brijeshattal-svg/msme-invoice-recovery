@@ -12,7 +12,7 @@ describe("WhatsApp text", () => {
   const text = whatsappText(facts);
 
   it("uses only approved strings: every digit passes the number check", () => {
-    expect(checkEmail({ subject: "", body: text }, facts)).toEqual({ ok: true, missing: [], strayNumbers: [], leakedNames: [], forbidden: [] });
+    expect(checkEmail({ subject: "", body: text }, facts)).toEqual({ ok: true, missing: [], strayNumbers: [], leakedNames: [], forbidden: [], misplaced: [] });
   });
 
   it("is short, hedged and has one placeholder", () => {

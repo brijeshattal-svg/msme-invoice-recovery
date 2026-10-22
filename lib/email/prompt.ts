@@ -48,6 +48,9 @@ export function feedbackFrom(r: CheckResult, facts: Facts): string {
       `You wrote these internal field names in the email: ${r.leakedNames.join(", ")}. They are labels for you only. Describe them in natural words instead (for example "the total now due", "the date payment was due").`,
     );
   }
+  if (r.misplaced.length) {
+    parts.push(`You put figures in the wrong place: ${r.misplaced.join(", ")}. Use each figure only for what it is: the interest as the interest, the total now due as the total, the invoice amount as the amount.`);
+  }
   if (r.missing.length) {
     parts.push(`You omitted: ${r.missing.map((k) => `${k} (${facts.strings[k]})`).join(", ")}. Include each verbatim.`);
   }

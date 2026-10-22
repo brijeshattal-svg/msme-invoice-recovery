@@ -21,7 +21,7 @@ describe("deterministic templates", () => {
     describe(name, () => {
       it.each(TONE_IDS)("%s tone always passes the number check", (tone) => {
         const email = buildTemplate(facts, tone);
-        expect(checkEmail(email, facts)).toEqual({ ok: true, missing: [], strayNumbers: [], leakedNames: [], forbidden: [] });
+        expect(checkEmail(email, facts)).toEqual({ ok: true, missing: [], strayNumbers: [], leakedNames: [], forbidden: [], misplaced: [] });
       });
     });
   }

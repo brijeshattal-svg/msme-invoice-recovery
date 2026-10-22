@@ -25,7 +25,7 @@ describe("fixture sanity", () => {
 
 describe("checkEmail: accepts", () => {
   it("a correct email", () => {
-    expect(checkEmail(good, facts)).toEqual({ ok: true, missing: [], strayNumbers: [], leakedNames: [], forbidden: [] });
+    expect(checkEmail(good, facts)).toEqual({ ok: true, missing: [], strayNumbers: [], leakedNames: [], forbidden: [], misplaced: [] });
   });
 
   it("legal references with digits ('Section 16', 'MSMED Act, 2006')", () => {
@@ -116,7 +116,7 @@ describe("checkEmail: leaked internal field names (seen in live Gemini drafts)",
 
   it("does not flag ordinary English words that happen to be field names", () => {
     const r = checkEmail(withBody(`${good.body}\n\nThe amount and the interest are set out above.`), facts);
-    expect(r).toEqual({ ok: true, missing: [], strayNumbers: [], leakedNames: [], forbidden: [] });
+    expect(r).toEqual({ ok: true, missing: [], strayNumbers: [], leakedNames: [], forbidden: [], misplaced: [] });
   });
 
   it("does not flag a name that is only part of a longer word", () => {
@@ -173,11 +173,52 @@ describe("checkEmail: longest string is removed first", () => {
   });
 });
 
-describe("checkEmail: known gap, documented not hidden", () => {
-  it("numbers written as words contain no digit and pass the mechanical check", () => {
-    // This is why the prompt forbids number words and the pitch lists it under known limits.
-    const r = checkEmail(withBody(`${good.body}\n\nPlease pay within seven days.`), facts);
-    expect(r.ok).toBe(true);
+describe("checkEmail: number words (gap closed in F3)", () => {
+  it.each([
+    "Please pay within seven days.",
+    "That is about two lakh rupees.",
+    "It has been sixty days.",
+    "Forty-five days have passed.",
+  ])("rejects %s", (line) => {
+    const r = checkEmail(withBody(`${good.body}\n\n${line}`), facts);
+    expect(r.ok).toBe(false);
+    expect(r.strayNumbers.length).toBeGreaterThan(0);
+  });
+
+  it("allows everyday 'one', 'half-yearly' and the legal 'three times the Bank Rate'", () => {
+    const r = checkEmail(withBody(`${good.body}\n\nOne more thing: as we understand it, interest runs at three times the Bank Rate, and dues are reported half-yearly.`), facts);
+    expect(r.strayNumbers).toEqual([]);
+  });
+});
+
+describe("checkEmail: approved figures in the wrong place (gap closed in F3)", () => {
+  const f = facts.strings;
+  it("rejects the total written as the interest", () => {
+    const r = checkEmail(withBody(good.body.replace(`Interest so far comes to ${f.interest}`, `Interest so far comes to ${f.totalDue}`)), facts);
+    expect(r.ok).toBe(false);
+    expect(r.misplaced.join(" ")).toContain(f.totalDue);
+  });
+
+  it("rejects the invoice amount written as the total now due", () => {
+    const body = `${good.body}\n\nTo be clear, the total now due is ${f.amount}.`;
+    const r = checkEmail(withBody(body), facts);
+    expect(r.ok).toBe(false);
+    expect(r.misplaced.join(" ")).toContain(f.amount);
+  });
+
+  it("rejects the interest written as the invoice amount", () => {
+    const body = `${good.body}\n\nInvoice amount: ${f.interest}`;
+    expect(checkEmail(withBody(body), facts).misplaced.join(" ")).toContain(f.interest);
+  });
+
+  it("accepts natural phrasings with each figure in its own place", () => {
+    const body = [
+      `Our invoice ${f.invoiceNumber} for ${f.amount}, dated ${f.invoiceDate}, was due by ${f.lastPayableDate} and is ${f.daysOverdue} overdue.`,
+      `Interest of ${f.interest} may be owed so far, bringing the total outstanding to ${f.totalDue}.`,
+      `${f.clientName}`,
+    ].join("\n\n");
+    const r = checkEmail(withBody(body), facts);
+    expect(r.misplaced).toEqual([]);
   });
 });
 

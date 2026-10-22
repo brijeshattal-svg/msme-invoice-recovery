@@ -82,7 +82,7 @@ export const STANDING = {
   daysCount: (n: number) => plural(n, "day", "days"),
   howTitle: "How this is worked out",
   how:
-    "Interest is charged at three times the RBI Bank Rate in force on each day. It builds up day by day on the amount owed at the start of each calendar month, using a 365-day year, and is added to the amount owed at the end of the month, so the next month's interest is worked out on a slightly larger amount.",
+    "Interest is worked out at three times the RBI Bank Rate in force on each day. It builds up day by day on the amount owed at the start of each calendar month, using a 365-day year, and is added to the amount owed at the end of the month, so the next month's interest is worked out on a slightly larger amount.",
   ratesLoaded: (date: string) => `Interest rates checked to ${date}`,
 
   // not yet due

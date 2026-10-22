@@ -176,6 +176,9 @@ export function reducer(s: State, a: Action): State {
 
 export type FormErrors = Partial<Record<FieldKey, string>>;
 
+/** ₹1,000 crore. Far above any one invoice from a micro or small enterprise; catches typos like extra zeros. */
+export const MAX_AMOUNT = 10_000_000_000;
+
 /**
  * Pure validation; `today` is todayIST(). `currency` is what the invoice was read as: anything
  * other than INR blocks until the founder re-enters the amount (editing it sets currency to INR).
@@ -189,6 +192,9 @@ export function validateForm(f: FormValues, today: string, currency: string | nu
   const amount = Number(f.amount);
   if (f.amount.trim() === "" || !Number.isFinite(amount) || amount <= 0) e.amount = "Enter the invoice amount in rupees.";
   else if (currency !== null && currency !== "INR") e.amount = COPY.notRupees;
+  // Paise only: a third decimal would be shown rounded in the email but used unrounded in the maths.
+  else if (!/^\d+(\.\d{1,2})?$/.test(f.amount.trim())) e.amount = "Use digits only, with at most 2 decimal places (paise).";
+  else if (amount > MAX_AMOUNT) e.amount = "That amount looks too large. Please check it.";
   if (!isValidISODate(f.udyamDate)) e.udyamDate = "Enter your Udyam registration date.";
   else if (f.udyamDate > today) e.udyamDate = "The registration date can't be in the future.";
   if (f.hasAgreement) {
@@ -198,6 +204,7 @@ export function validateForm(f: FormValues, today: string, currency: string | nu
     }
   }
   if (!isValidISODate(f.acceptanceDate)) e.acceptanceDate = "Enter a valid acceptance date.";
+  else if (f.acceptanceDate > today) e.acceptanceDate = "The acceptance date can't be in the future.";
   return e;
 }
 
