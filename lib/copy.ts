@@ -18,6 +18,15 @@ export const COPY = {
   unreadable: "We couldn't read this",
   pleaseCheck: "Please check",
   notRupees: "This invoice isn't in rupees. Enter the amount in INR to continue.",
+  fixErrors: (n: number) => (n === 1 ? "Please fix 1 thing below." : `Please fix ${n} things below.`),
+  dataTitle: "How your data is handled",
+  // Accurate, not reassuring: we control what this app keeps; we do not control the AI provider.
+  dataPoints: [
+    "Your invoice file is sent to an AI provider's API (Google Gemini) so the details can be read. The details you confirm are sent again to write the email.",
+    "This app does not store your file, the details or the email. There is no database and no login. Everything stays in this browser tab and is gone when you close or refresh it.",
+    "Our server logs only whether a request worked and how long it took, never what was in it.",
+    "What the AI provider does with what it receives is set by its own terms, not by this app. Depending on the plan, those terms may let it keep or use what is sent, so check them before uploading a real client invoice.",
+  ],
 } as const;
 
 // Phase 3 "Where you stand" screen. Meanings follow docs/LEGAL_RULES_SPEC.md section 6.

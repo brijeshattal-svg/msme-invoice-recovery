@@ -11,6 +11,7 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 const HEADERS = { "Cache-Control": "no-store" };
+const MAX_BODY_BYTES = 20_000;
 
 // Strings arrive from the browser but originally from an untrusted file: clean, then cap.
 const Text = (max: number) =>
@@ -41,6 +42,11 @@ function respond(started: number, status: number, body: unknown, extra = ""): Re
 export async function POST(req: Request) {
   const started = Date.now();
   if (!rateLimit(`draft:${ipFrom(req)}`)) return respond(started, 429, { error: "rate_limited" });
+
+  // A real request is well under 2 KB; refuse oversized bodies before reading them.
+  if (Number(req.headers.get("content-length") ?? 0) > MAX_BODY_BYTES) {
+    return respond(started, 413, { error: "too_large" });
+  }
 
   let json: unknown;
   try {

@@ -44,7 +44,7 @@ export function Upload({ upload, error, onFile, onSample, onManual }: Props) {
         }}
         className={[
           "flex flex-col items-center gap-3 rounded-xl border-2 border-dashed p-6 text-center",
-          over ? "border-indigo-700 bg-indigo-50 dark:bg-indigo-950" : "border-zinc-400 dark:border-zinc-600",
+          over ? "border-indigo-700 bg-indigo-50 dark:bg-indigo-950" : "border-zinc-500",
         ].join(" ")}
       >
         <input
@@ -52,6 +52,10 @@ export function Upload({ upload, error, onFile, onSample, onManual }: Props) {
           id="invoice-file"
           type="file"
           accept="application/pdf,image/jpeg,image/png"
+          // Reached through the visible button below; keep it out of the tab order so keyboard
+          // and screen-reader users don't meet an unlabelled duplicate control.
+          aria-label="Upload invoice (PDF or photo)"
+          tabIndex={-1}
           className="sr-only"
           disabled={busy}
           onChange={(e) => {
@@ -72,7 +76,7 @@ export function Upload({ upload, error, onFile, onSample, onManual }: Props) {
           type="button"
           disabled={busy}
           onClick={onSample}
-          className="min-h-11 rounded px-3 text-base font-medium text-indigo-800 underline underline-offset-4 hover:text-indigo-950 focus-visible:outline-2 focus-visible:outline-indigo-700 disabled:opacity-60 dark:text-indigo-300"
+          className="min-h-11 min-w-11 rounded px-3 text-base font-medium text-indigo-800 underline underline-offset-4 hover:text-indigo-950 focus-visible:outline-2 focus-visible:outline-indigo-700 disabled:opacity-60 dark:text-indigo-300"
         >
           Try a sample invoice
         </button>
@@ -88,20 +92,30 @@ export function Upload({ upload, error, onFile, onSample, onManual }: Props) {
         {upload === "error" && error && (
           <div role="alert" className="rounded-lg border border-red-300 bg-red-50 p-4 text-base text-red-900 dark:border-red-800 dark:bg-red-950 dark:text-red-100">
             <p>{error}</p>
-            <button type="button" onClick={onManual} className="mt-2 min-h-11 font-semibold underline underline-offset-4">
+            <button type="button" onClick={onManual} className="mt-2 min-h-11 min-w-11 font-semibold underline underline-offset-4">
               Enter details manually instead
             </button>
           </div>
         )}
       </div>
 
-      <p className="text-sm text-zinc-700 dark:text-zinc-300">{COPY.privacy}</p>
+      <div className="flex flex-col gap-2">
+        <p className="text-sm text-zinc-700 dark:text-zinc-300">{COPY.privacy}</p>
+        <details className="rounded-lg border border-zinc-300 text-sm dark:border-zinc-700">
+          <summary className="min-h-11 min-w-11 cursor-pointer px-3 py-2.5 font-semibold">{COPY.dataTitle}</summary>
+          <ul className="flex list-disc flex-col gap-2 px-3 pb-3 pl-8 text-zinc-800 dark:text-zinc-200">
+            {COPY.dataPoints.map((p) => (
+              <li key={p}>{p}</li>
+            ))}
+          </ul>
+        </details>
+      </div>
       {upload !== "error" && (
         <button
           type="button"
           onClick={onManual}
           disabled={busy}
-          className="min-h-11 self-start text-sm text-zinc-700 underline underline-offset-4 dark:text-zinc-300"
+          className="min-h-11 min-w-11 self-start text-sm text-zinc-700 underline underline-offset-4 dark:text-zinc-300"
         >
           Enter details manually instead
         </button>

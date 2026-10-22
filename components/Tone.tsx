@@ -23,7 +23,7 @@ export function ToneScreen({ tone, onSelect, onDraft, onBack }: Props) {
         {TONE_IDS.map((id) => (
           <label
             key={id}
-            className="flex min-h-20 cursor-pointer flex-col justify-center gap-1 rounded-xl border-2 border-zinc-400 p-4 has-[:checked]:border-indigo-700 has-[:checked]:bg-indigo-50 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-indigo-700 dark:border-zinc-600 dark:has-[:checked]:bg-indigo-950"
+            className="flex min-h-20 cursor-pointer flex-col justify-center gap-1 rounded-xl border-2 border-zinc-500 p-4 has-[:checked]:border-indigo-700 has-[:checked]:bg-indigo-50 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-indigo-700 dark:has-[:checked]:bg-indigo-950"
           >
             <input
               type="radio"
@@ -47,7 +47,7 @@ export function ToneScreen({ tone, onSelect, onDraft, onBack }: Props) {
         >
           {EMAIL.draftButton}
         </button>
-        <button type="button" onClick={onBack} className="min-h-11 self-start text-base underline underline-offset-4">
+        <button type="button" onClick={onBack} className="min-h-11 min-w-11 self-start text-base underline underline-offset-4">
           {EMAIL.back}
         </button>
       </div>

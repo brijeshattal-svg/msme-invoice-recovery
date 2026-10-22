@@ -142,7 +142,7 @@ export function SendScreen({ draft, facts, onEdit, onChangeTone, onBack }: Props
               id="e-subject"
               value={draft.subject}
               onChange={(e) => onEdit("subject", e.target.value)}
-              className="min-h-12 w-full rounded-lg border-2 border-zinc-400 bg-white px-3 py-2 text-base text-zinc-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50"
+              className="min-h-12 w-full rounded-lg border-2 border-zinc-500 bg-white px-3 py-2 text-base text-zinc-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700 dark:bg-zinc-900 dark:text-zinc-50"
             />
           </div>
 
@@ -150,7 +150,7 @@ export function SendScreen({ draft, facts, onEdit, onChangeTone, onBack }: Props
             <label htmlFor="e-body" className="text-base font-semibold">
               {EMAIL.bodyLabel}
             </label>
-            <div className="relative rounded-lg border-2 border-zinc-400 bg-white focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-indigo-700 dark:border-zinc-600 dark:bg-zinc-900">
+            <div className="relative rounded-lg border-2 border-zinc-500 bg-white focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-indigo-700 dark:bg-zinc-900">
               <div aria-hidden className="min-h-72 whitespace-pre-wrap break-words p-3 text-base leading-7 text-transparent">
                 <Highlight text={draft.body} />
               </div>
@@ -190,10 +190,10 @@ export function SendScreen({ draft, facts, onEdit, onChangeTone, onBack }: Props
       )}
 
       <div className="flex flex-wrap gap-x-6 gap-y-1">
-        <button type="button" onClick={onChangeTone} className="min-h-11 text-base underline underline-offset-4">
+        <button type="button" onClick={onChangeTone} className="min-h-11 min-w-11 text-base underline underline-offset-4">
           {EMAIL.changeTone}
         </button>
-        <button type="button" onClick={onBack} className="min-h-11 text-base underline underline-offset-4">
+        <button type="button" onClick={onBack} className="min-h-11 min-w-11 text-base underline underline-offset-4">
           {EMAIL.back}
         </button>
       </div>

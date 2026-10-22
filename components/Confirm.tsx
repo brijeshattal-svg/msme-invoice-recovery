@@ -23,7 +23,7 @@ function Field({
     ? "border-red-600"
     : flag
       ? "border-amber-500"
-      : "border-zinc-400 dark:border-zinc-600";
+      : "border-zinc-500";
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex flex-wrap items-center gap-2">
@@ -89,6 +89,15 @@ export function Confirm({ state, dispatch, onSubmit }: Props) {
         </p>
       )}
 
+      {/* Announced to screen readers on submit; focus also moves to the first field with a problem. */}
+      <div aria-live="assertive">
+        {Object.keys(errors).length > 0 && (
+          <p className="rounded-lg border border-red-600 bg-red-50 p-3 text-sm font-medium text-red-800 dark:bg-red-950 dark:text-red-200">
+            {COPY.fixErrors(Object.keys(errors).length)}
+          </p>
+        )}
+      </div>
+
       <Field id="f-clientName" label="Client name" flag={flagged.clientName} error={errors.clientName}>
         {(cls, d) => <input id="f-clientName" className={cls} aria-describedby={d} aria-invalid={!!errors.clientName} value={form.clientName} onChange={set("clientName")} autoComplete="off" />}
       </Field>
@@ -115,7 +124,7 @@ export function Confirm({ state, dispatch, onSubmit }: Props) {
           </p>
           <div className="flex gap-3">
             {[true, false].map((v) => (
-              <label key={String(v)} className={`flex min-h-12 flex-1 cursor-pointer items-center justify-center rounded-lg border-2 px-4 text-base font-medium has-[:checked]:border-indigo-700 has-[:checked]:bg-indigo-50 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-indigo-700 dark:has-[:checked]:bg-indigo-950 ${"border-zinc-400 dark:border-zinc-600"}`}>
+              <label key={String(v)} className={`flex min-h-12 flex-1 cursor-pointer items-center justify-center rounded-lg border-2 px-4 text-base font-medium has-[:checked]:border-indigo-700 has-[:checked]:bg-indigo-50 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-indigo-700 dark:has-[:checked]:bg-indigo-950 ${"border-zinc-500"}`}>
                 <input type="radio" name="agreement" className="sr-only" checked={form.hasAgreement === v} onChange={() => dispatch({ type: "edit", field: "hasAgreement", value: v })} />
                 {v ? "Yes" : "No"}
               </label>
@@ -142,7 +151,7 @@ export function Confirm({ state, dispatch, onSubmit }: Props) {
         <button type="submit" className="min-h-12 rounded-lg bg-indigo-700 px-5 py-3 text-base font-semibold text-white hover:bg-indigo-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700">
           Check what I&apos;m owed
         </button>
-        <button type="button" onClick={() => dispatch({ type: "go", step: "upload" })} className="min-h-11 self-start text-base underline underline-offset-4">
+        <button type="button" onClick={() => dispatch({ type: "go", step: "upload" })} className="min-h-11 min-w-11 self-start text-base underline underline-offset-4">
           Back
         </button>
       </div>

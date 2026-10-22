@@ -18,7 +18,7 @@ type Props = {
 
 const btnPrimary =
   "min-h-12 rounded-lg bg-indigo-700 px-5 py-3 text-base font-semibold text-white hover:bg-indigo-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700";
-const btnLink = "min-h-11 self-start text-base underline underline-offset-4";
+const btnLink = "min-h-11 min-w-11 self-start text-base underline underline-offset-4";
 
 const rateText = (m: MonthRow) =>
   m.segments.map((s) => `${formatPercent(s.section16Rate)} × ${STANDING.daysCount(s.days)}`);
