@@ -7,7 +7,7 @@ export default function NotFound() {
       <p className="text-base">The link may be wrong or out of date.</p>
       <Link
         href="/"
-        className="inline-flex min-h-12 items-center self-start rounded-lg bg-indigo-700 px-5 py-3 text-base font-semibold text-white hover:bg-indigo-800"
+        className="inline-flex min-h-12 min-w-11 items-center self-start rounded-button bg-brand-700 px-5 py-3 text-base font-semibold text-on-brand hover:bg-brand-800"
       >
         Check an invoice
       </Link>

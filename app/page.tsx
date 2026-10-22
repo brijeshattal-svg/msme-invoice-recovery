@@ -104,7 +104,7 @@ export default function Home() {
         />
       )}
 
-      <footer className="mt-auto text-sm text-zinc-700 dark:text-zinc-300">{COPY.disclaimer}</footer>
+      <footer className="mt-auto text-sm text-muted">{COPY.disclaimer}</footer>
     </main>
   );
 }

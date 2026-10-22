@@ -1,5 +1,7 @@
 import { STEPS, type Step } from "@/lib/wizard";
+import { cx } from "./ui/cx";
 
+// Kept as-is in R1 (structure unchanged); R2 replaces it with ui/ProgressBar.
 export function Stepper({ current }: { current: Step }) {
   const idx = STEPS.findIndex((s) => s.id === current);
   return (
@@ -10,17 +12,17 @@ export function Stepper({ current }: { current: Step }) {
         return (
           <li key={s.id} className="flex flex-1 flex-col items-center gap-1" aria-current={active ? "step" : undefined}>
             <span
-              className={[
-                "flex h-8 w-8 items-center justify-center rounded-full border-2 font-semibold",
-                done ? "border-indigo-700 bg-indigo-700 text-white" : "",
-                active ? "border-indigo-700 bg-white text-indigo-700 dark:bg-zinc-900 dark:text-indigo-300" : "",
-                !done && !active ? "border-zinc-500 text-zinc-500 dark:text-zinc-400" : "",
-              ].join(" ")}
+              className={cx(
+                "num flex h-8 w-8 items-center justify-center rounded-full border-2 font-semibold",
+                done && "border-brand-700 bg-brand-700 text-on-brand",
+                active && "border-brand-700 bg-surface text-link",
+                !done && !active && "border-control text-muted",
+              )}
             >
               {done ? <span aria-hidden>✓</span> : i + 1}
               {done && <span className="sr-only">completed</span>}
             </span>
-            <span className={active ? "font-semibold" : "text-zinc-600 dark:text-zinc-400"}>{s.label}</span>
+            <span className={active ? "font-semibold" : "text-muted"}>{s.label}</span>
           </li>
         );
       })}

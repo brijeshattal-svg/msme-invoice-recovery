@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { Button } from "@/components/ui/Button";
 
 // Shown if something unexpected throws while rendering. Plain words and a way forward;
 // the technical detail stays in the server/browser console and never reaches the screen.
@@ -17,23 +18,15 @@ export default function Error({ reset }: { error: Error & { digest?: string }; r
         Sorry about that. Nothing was saved or sent. You can try again, or start over with your invoice.
       </p>
       <div className="flex flex-col gap-3 sm:flex-row">
-        <button
-          type="button"
-          onClick={reset}
-          className="min-h-12 rounded-lg bg-indigo-700 px-5 py-3 text-base font-semibold text-white hover:bg-indigo-800"
-        >
+        <Button size="lg" onClick={reset}>
           Try again
-        </button>
-        <button
-          type="button"
-          // Full reload on purpose: it clears all in-memory state, which is the point of "start over".
-          onClick={() => window.location.reload()}
-          className="min-h-12 rounded-lg border-2 border-indigo-700 px-5 py-3 text-base font-semibold text-indigo-800 hover:bg-indigo-50 dark:text-indigo-200 dark:hover:bg-indigo-950"
-        >
+        </Button>
+        {/* Full reload on purpose: it clears all in-memory state, which is the point of "start over". */}
+        <Button variant="secondary" size="lg" onClick={() => window.location.reload()}>
           Start over
-        </button>
+        </Button>
       </div>
-      <p className="text-sm text-zinc-700 dark:text-zinc-300">Not legal advice.</p>
+      <p className="text-sm text-muted">Not legal advice.</p>
     </main>
   );
 }

@@ -1,6 +1,6 @@
 # Project context: Overdue Invoice Recovery for Service MSEs (hackathon MVP)
 
-Read these before writing code: `IMPLEMENTATION_PLAN.md`, `docs/LEGAL_RULES_SPEC.md`, `docs/golden-vectors.json`, `reference/msme-engine.reference.mjs`.
+Read these before writing code: `IMPLEMENTATION_PLAN.md`, `docs/LEGAL_RULES_SPEC.md`, `docs/golden-vectors.json`, `reference/msme-engine.reference.mjs`. For any UI work, `REDESIGN.md` is the design spec (product name: FortyFive).
 
 ## What it is
 A no-login, five-screen Next.js app on Vercel. Founder uploads an unpaid invoice (PDF/photo) -> AI extracts fields -> founder confirms + adds 3 facts -> TypeScript computes legal due date, days overdue and MSMED Act s.16 interest -> founder picks a tone -> AI drafts a payment-chaser email -> code verifies every number -> founder copies it or opens it in their own email app.

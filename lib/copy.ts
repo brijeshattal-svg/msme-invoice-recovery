@@ -18,6 +18,7 @@ export const COPY = {
   unreadable: "We couldn't read this",
   pleaseCheck: "Please check",
   notRupees: "This invoice isn't in rupees. Enter the amount in INR to continue.",
+  stepOf: (n: number, total: number) => `Step ${n} of ${total}`,
   fixErrors: (n: number) => (n === 1 ? "Please fix 1 thing below." : `Please fix ${n} things below.`),
   dataTitle: "How your data is handled",
   // Accurate, not reassuring: we control what this app keeps; we do not control the AI provider.
