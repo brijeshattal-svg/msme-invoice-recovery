@@ -5,7 +5,7 @@ import type { Facts } from "@/lib/email/facts";
 import { buildDraftPrompt, DRAFT_SYSTEM_PROMPT, feedbackFrom } from "@/lib/email/prompt";
 import { buildTemplate } from "@/lib/email/template";
 import type { Tone } from "@/lib/email/tones";
-import { getClient, getModels, SWITCH_STATUSES } from "./client";
+import { getClient, getModels, isNetworkFailure, NON_LAST_TIMEOUT_MS, SWITCH_STATUSES } from "./client";
 
 export type DraftResult = Email & { source: "ai" | "template"; redrafts: number };
 
@@ -24,6 +24,7 @@ class CallError extends Error {
     public kind: "api" | "bad_output",
     public transient = false,
     public status?: number,
+    public switchable = false,
   ) {
     super(kind);
   }
@@ -64,7 +65,12 @@ async function callOnce(model: string, prompt: string, timeoutMs: number, capThi
     console.info(`draft model_error ${e instanceof ApiError ? `status=${e.status}` : `name=${e instanceof Error ? e.name : "unknown"}`} model=${model}`);
     // A busy model (503 and friends) is worth a short retry; 429s, timeouts and a missing key are not.
     const status = e instanceof ApiError ? e.status : undefined;
-    throw new CallError("api", status !== undefined && TRANSIENT_STATUSES.includes(status), status);
+    throw new CallError(
+      "api",
+      status !== undefined && TRANSIENT_STATUSES.includes(status),
+      status,
+      (status !== undefined && SWITCH_STATUSES.includes(status)) || isNetworkFailure(e),
+    );
   }
   if (res.promptFeedback?.blockReason) {
     console.info(`draft model_blocked reason=${res.promptFeedback.blockReason}`);
@@ -116,7 +122,8 @@ export async function draftEmail(
     attempts++;
     let draft: Email;
     try {
-      draft = await callOnce(models[modelIdx], buildDraftPrompt(facts, tone, feedback), Math.min(PER_CALL_MS, remaining - 2_000), capThinking);
+      const cap = modelIdx < models.length - 1 ? NON_LAST_TIMEOUT_MS : PER_CALL_MS; // short leash unless it is the last model
+      draft = await callOnce(models[modelIdx], buildDraftPrompt(facts, tone, feedback), Math.min(cap, remaining - 2_000), capThinking);
     } catch (e) {
       if (e instanceof CallError && e.status === 400 && capThinking) {
         capThinking = false; // a model without thinking support rejects thinkingConfig: retry plainly, once
@@ -127,8 +134,8 @@ export async function draftEmail(
         feedback = 'Your previous answer was not a valid JSON object of the form {"subject": string, "body": string}.';
         continue;
       }
-      if (e instanceof CallError && e.status !== undefined && SWITCH_STATUSES.includes(e.status) && modelIdx < models.length - 1) {
-        // Out of quota (429), busy (503/500/504) or gone (404): the next model may work, so go straight there.
+      if (e instanceof CallError && e.switchable && modelIdx < models.length - 1) {
+        // Out of quota (429), busy (503/500/504), gone (404), too slow or unreachable: try the next model.
         console.info(`draft model_switch to=${models[modelIdx + 1]}`);
         modelIdx++;
         transientRetries = 0;

@@ -320,7 +320,28 @@ describe("draftEmail: model chain (fallback on 429, 503, 404)", () => {
 
   it.each([
     ["a timeout", () => Object.assign(new Error("The operation was aborted due to timeout"), { name: "TimeoutError" })],
+    ["a network failure (fetch failed)", () => new TypeError("fetch failed")],
+  ])("DOES move to the next model after %s (a hung or unreachable model)", async (_n, make) => {
+    generateContent.mockRejectedValueOnce(make()).mockResolvedValueOnce(reply(good));
+    const r = await draftEmail(facts, "friendly", Date.now, noSleep);
+    expect(r).toMatchObject({ source: "ai", redrafts: 0 });
+    expect(modelsCalled()).toEqual(["primary", "second"]);
+  });
+
+  it("gives models before the last a 20 s leash and the last model the long one", async () => {
+    const spy = vi.spyOn(AbortSignal, "timeout");
+    generateContent.mockRejectedValue(api(503));
+    await draftEmail(facts, "friendly", Date.now, noSleep);
+    const ms = spy.mock.calls.map((c) => c[0]);
+    expect(ms[0]).toBeLessThanOrEqual(20_000);
+    expect(ms[1]).toBeLessThanOrEqual(20_000);
+    expect(Math.max(...ms.slice(2))).toBeGreaterThan(20_000);
+    spy.mockRestore();
+  });
+
+  it.each([
     ["a 401 bad key", () => api(401)],
+    ["a missing key", () => new Error("GEMINI_API_KEY is not set")],
   ])("does NOT switch models after %s", async (_n, make) => {
     generateContent.mockRejectedValue(make());
     const r = await draftEmail(facts, "friendly", Date.now, noSleep);

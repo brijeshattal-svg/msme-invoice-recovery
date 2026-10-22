@@ -1,5 +1,5 @@
 import { ApiError, FinishReason } from "@google/genai";
-import { getClient, getModels, SWITCH_STATUSES } from "./client";
+import { getClient, getModels, isNetworkFailure, NON_LAST_TIMEOUT_MS, SWITCH_STATUSES } from "./client";
 import { normalizeExtraction } from "./normalize";
 import { ExtractedInvoiceSchema, type ExtractedInvoice } from "./schemas";
 import type { AllowedMime } from "@/lib/limits";
@@ -56,7 +56,7 @@ async function callModel(model: string, base64: string, mimeType: AllowedMime, t
     // Status only, never the file or the fields (CLAUDE.md rule 3).
     const status = e instanceof ApiError ? e.status : undefined;
     console.info(`extract model_error status=${status ?? (e instanceof Error ? e.name : "unknown")} model=${model}`);
-    const switchable = status !== undefined && SWITCH_STATUSES.includes(status);
+    const switchable = (status !== undefined && SWITCH_STATUSES.includes(status)) || isNetworkFailure(e);
     throw new ExtractionError(status === 429 ? "rate_limited" : "ai_failed", switchable);
   }
 
@@ -78,8 +78,15 @@ async function callModel(model: string, base64: string, mimeType: AllowedMime, t
 }
 
 /** One model: retries once, and only for a malformed answer (never after a timeout or a rate limit). */
-async function readWithModel(model: string, base64: string, mimeType: AllowedMime, deadline: number): Promise<ExtractedInvoice> {
-  const timeout = () => Math.max(1_000, Math.min(TIMEOUT_MS, deadline - Date.now() - 1_000));
+async function readWithModel(
+  model: string,
+  base64: string,
+  mimeType: AllowedMime,
+  deadline: number,
+  isLast: boolean,
+): Promise<ExtractedInvoice> {
+  const cap = isLast ? TIMEOUT_MS : NON_LAST_TIMEOUT_MS;
+  const timeout = () => Math.max(1_000, Math.min(cap, deadline - Date.now() - 1_000));
   try {
     return await callModel(model, base64, mimeType, timeout());
   } catch (e) {
@@ -95,8 +102,9 @@ async function readWithModel(model: string, base64: string, mimeType: AllowedMim
 
 /**
  * Reads an invoice, trying each model in order (primary first) when one is out of quota (429),
- * busy (503/500/504) or gone (404). Timeouts, blocked content and bad answers do NOT move on,
- * because another model would not fix them and the route has a 60 s limit.
+ * busy (503/500/504), gone (404), too slow (timeout) or unreachable (network error). Blocked
+ * content, bad requests/keys and malformed answers do NOT move on: another model would not fix them.
+ * Models before the last get a 20 s leash so one hung model cannot use up the 60 s route limit.
  * Throws ExtractionError "rate_limited" only if every model was rate limited, otherwise "ai_failed".
  */
 export async function extractInvoice(bytes: Buffer, mimeType: AllowedMime): Promise<ExtractedInvoice> {
@@ -106,11 +114,11 @@ export async function extractInvoice(bytes: Buffer, mimeType: AllowedMime): Prom
   let tried = 0;
   let rateLimited = 0;
 
-  for (const model of models) {
+  for (const [i, model] of models.entries()) {
     if (tried > 0 && deadline - Date.now() < MIN_CALL_MS) break;
     tried++;
     try {
-      return normalizeExtraction(await readWithModel(model, base64, mimeType, deadline));
+      return normalizeExtraction(await readWithModel(model, base64, mimeType, deadline, i === models.length - 1));
     } catch (e) {
       if (!(e instanceof ExtractionError) || !e.switchable) throw e;
       if (e.kind === "rate_limited") rateLimited++;

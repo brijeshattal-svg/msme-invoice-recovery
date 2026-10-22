@@ -140,8 +140,36 @@ describe("extractInvoice: model chain (fallback on 429, 503, 404)", () => {
 
   it.each([
     ["a timeout", () => Object.assign(new Error("The operation was aborted due to timeout"), { name: "TimeoutError" })],
+    ["an abort", () => Object.assign(new Error("This operation was aborted"), { name: "AbortError" })],
+    ["a network failure (fetch failed)", () => new TypeError("fetch failed")],
+  ])("DOES move to the next model after %s (a hung or unreachable model)", async (_n, make) => {
+    generateContent.mockRejectedValueOnce(make()).mockResolvedValueOnce(reply(JSON.stringify(valid)));
+    expect(await extractInvoice(bytes, "image/png")).toMatchObject({ clientName: "Acme" });
+    expect(modelsCalled()).toEqual(["primary", "second"]);
+  });
+
+  it("every model timing out is ai_failed (not rate_limited)", async () => {
+    generateContent.mockRejectedValue(Object.assign(new Error("t"), { name: "TimeoutError" }));
+    await expect(extractInvoice(bytes, "image/png")).rejects.toMatchObject({ kind: "ai_failed" });
+    expect(modelsCalled()).toEqual(["primary", "second", "third"]);
+  });
+
+  it("gives models before the last a 20 s leash and the last model the long one", async () => {
+    const spy = vi.spyOn(AbortSignal, "timeout");
+    generateContent.mockRejectedValue(api(503));
+    await expect(extractInvoice(bytes, "image/png")).rejects.toBeInstanceOf(ExtractionError);
+    const ms = spy.mock.calls.map((c) => c[0]);
+    expect(ms).toHaveLength(3);
+    expect(ms[0]).toBeLessThanOrEqual(20_000);
+    expect(ms[1]).toBeLessThanOrEqual(20_000);
+    expect(ms[2]).toBeGreaterThan(20_000);
+    spy.mockRestore();
+  });
+
+  it.each([
     ["a 400 bad request", () => api(400)],
     ["a 401 bad key", () => api(401)],
+    ["a missing key", () => new Error("GEMINI_API_KEY is not set")],
   ])("does NOT switch models after %s (another model would not fix it)", async (_n, make) => {
     generateContent.mockRejectedValue(make());
     await expect(extractInvoice(bytes, "image/png")).rejects.toMatchObject({ kind: "ai_failed" });

@@ -5,8 +5,10 @@ import { GoogleGenAI } from "@google/genai";
 const DEFAULT_PRIMARY = "gemini-3.5-flash";
 // Tried in order when the primary is out of quota (429), busy (503/500/504) or gone (404).
 // Free-tier quota is counted per model, so each fallback adds its own daily allowance.
-// Checked live on 22 Oct 2026: 3.7 answered (with a 503 at times), 3.6 answered but slowly.
-const DEFAULT_FALLBACKS = ["gemini-3.7-flash", "gemini-3.6-flash"];
+// Timed live on 22 Oct 2026 with the real sample PDF: flash-lite-latest answered in 6.5 s;
+// 3.7-flash hung past 45 s; 3.6-flash and 3.5-flash-lite had network errors; 3.8-flash and
+// 3.1-flash-lite returned 503. Preview models are flaky, so re-time these before relying on them.
+const DEFAULT_FALLBACKS = ["gemini-flash-lite-latest", "gemini-3.7-flash"];
 
 export const MODEL = process.env.GEMINI_MODEL || DEFAULT_PRIMARY;
 
@@ -35,3 +37,14 @@ export function getClient(): GoogleGenAI {
 
 /** HTTP statuses that mean "this model can't serve you right now": move on to the next model. */
 export const SWITCH_STATUSES = [429, 404, 500, 503, 504];
+
+/**
+ * A call that timed out or never reached the API ("fetch failed") says nothing about the request:
+ * a different model may well answer, so it also moves the chain on. A missing key is a plain Error
+ * and does not.
+ */
+export const isNetworkFailure = (e: unknown): boolean =>
+  e instanceof Error && ["AbortError", "TimeoutError", "TypeError"].includes(e.name);
+
+/** A model that is not the last one gets a short leash so a hung model cannot eat the whole budget. */
+export const NON_LAST_TIMEOUT_MS = 20_000;
