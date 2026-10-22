@@ -6,11 +6,8 @@ import { checkEmail } from "@/lib/email/check";
 import type { Facts } from "@/lib/email/facts";
 import { buildMailto, emailAsText } from "@/lib/email/mailto";
 import type { DraftState } from "@/lib/wizard";
-import { Badge } from "./ui/Badge";
 import { Banner } from "./ui/Banner";
 import { Button } from "./ui/Button";
-import { cx } from "./ui/cx";
-import { inputClass } from "./ui/Field";
 import { Skeleton } from "./ui/Skeleton";
 import { Spinner } from "./ui/Spinner";
 
@@ -102,20 +99,25 @@ export function SendScreen({ draft, facts, onEdit, onChangeTone, onBack }: Props
   }
 
   return (
-    <section aria-labelledby="send-h" className="flex flex-col gap-5">
-      <h2 id="send-h" ref={heading} tabIndex={-1} className="step-title outline-none">
-        {EMAIL.sendTitle}
-      </h2>
+    <section aria-labelledby="send-h" className="flex flex-col gap-5 pb-28">
+      <div className="text-center">
+        <h2 id="send-h" ref={heading} tabIndex={-1} className="step-title outline-none">
+          {EMAIL.sendTitle}
+        </h2>
+        <p className="mt-4 text-lg text-muted">{EMAIL.sendSub}</p>
+      </div>
 
       {draft.status === "loading" && (
         <div role="status" aria-live="polite" className="flex flex-col gap-4">
-          <p className="flex items-center gap-2 text-base">
-            <Spinner className="text-brand-700" />
+          <p className="flex items-center justify-center gap-2 text-base font-semibold text-brand-700">
+            <Spinner />
             {EMAIL.writing}
           </p>
-          <div className="flex flex-col gap-3">
-            <Skeleton className="h-12" />
-            <Skeleton className="h-72" />
+          <div className="flex flex-col gap-4 rounded-hero bg-surface p-6 shadow-raised">
+            <Skeleton className="h-5" />
+            <Skeleton className="h-5 w-3/5" />
+            <Skeleton className="h-5" />
+            <Skeleton className="h-5 w-2/5" />
           </div>
         </div>
       )}
@@ -128,32 +130,42 @@ export function SendScreen({ draft, facts, onEdit, onChangeTone, onBack }: Props
 
       {ready && (
         <>
-          {draft.edited ? (
-            <p className="text-sm font-medium text-ink">{EMAIL.edited}</p>
-          ) : draft.source === "ai" ? (
-            <Badge tone="success" size="md" className="self-start">
-              <span aria-hidden>✓ </span>
-              {EMAIL.checkedChip}
-            </Badge>
-          ) : (
-            <Badge tone="neutral" size="md" className="self-start">
-              {EMAIL.templateChip}
-            </Badge>
-          )}
-
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="e-subject" className="text-base font-semibold">
-              {EMAIL.subjectLabel}
-            </label>
-            <input id="e-subject" value={draft.subject} onChange={(e) => onEdit("subject", e.target.value)} className={cx(inputClass, "border-control")} />
+          <div className="text-center">
+            {draft.edited ? (
+              <p className="text-sm font-medium text-ink">{EMAIL.edited}</p>
+            ) : draft.source === "ai" ? (
+              <span className="inline-flex items-center gap-2 rounded-full bg-brand-50 px-4 py-2 text-[15px] font-semibold text-brand-800">
+                <span aria-hidden>✓</span>
+                {EMAIL.checkedChip}
+              </span>
+            ) : (
+              <span className="inline-flex items-center rounded-full bg-line px-4 py-2 text-[15px] font-semibold text-ink">{EMAIL.templateChip}</span>
+            )}
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="e-body" className="text-base font-semibold">
+          <div className="overflow-hidden rounded-hero bg-surface shadow-raised">
+            <div className="mail-dots flex items-center gap-2 border-b border-line bg-[color-mix(in_srgb,var(--line)_40%,transparent)] px-[18px] py-3.5" aria-hidden>
+              <i />
+              <i />
+              <i />
+              <span className="ml-2.5 text-sm text-muted">{EMAIL.newMessage}</span>
+            </div>
+            <div className="flex items-center gap-3 border-b border-line px-[22px] py-1.5">
+              <label htmlFor="e-subject" className="w-[60px] text-[15px] text-muted">
+                {EMAIL.subjectLabel}
+              </label>
+              <input
+                id="e-subject"
+                value={draft.subject}
+                onChange={(e) => onEdit("subject", e.target.value)}
+                className="min-h-[46px] flex-1 bg-transparent text-[17px] font-semibold text-ink outline-none"
+              />
+            </div>
+            <label htmlFor="e-body" className="sr-only">
               {EMAIL.bodyLabel}
             </label>
-            <div className="relative rounded-input border-2 border-control bg-surface focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand-600">
-              <div aria-hidden className="min-h-72 whitespace-pre-wrap break-words p-3 text-base leading-7 text-transparent">
+            <div className="relative focus-within:bg-[color-mix(in_srgb,var(--brand-50)_35%,transparent)]">
+              <div aria-hidden className="min-h-[420px] whitespace-pre-wrap break-words p-[22px] text-[17px] leading-[1.65] text-transparent">
                 <Highlight text={draft.body} />
               </div>
               <textarea
@@ -161,7 +173,7 @@ export function SendScreen({ draft, facts, onEdit, onChangeTone, onBack }: Props
                 value={draft.body}
                 onChange={(e) => onEdit("body", e.target.value)}
                 spellCheck
-                className="absolute inset-0 h-full w-full resize-none overflow-hidden bg-transparent p-3 text-base leading-7 text-ink outline-none"
+                className="absolute inset-0 h-full w-full resize-none overflow-hidden bg-transparent p-[22px] text-[17px] leading-[1.65] text-ink outline-none"
               />
             </div>
           </div>
@@ -177,29 +189,41 @@ export function SendScreen({ draft, facts, onEdit, onChangeTone, onBack }: Props
             </Banner>
           )}
 
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Button size="lg" onClick={onCopy} className="flex-1">
-              {EMAIL.copy}
-            </Button>
-            <Button variant="secondary" size="lg" onClick={onOpen} className="flex-1">
-              {EMAIL.open}
-            </Button>
+          <div className="rounded-hero bg-surface px-6 py-5 shadow-raised">
+            <h3 className="mb-2 text-lg font-semibold">{EMAIL.beforeTitle}</h3>
+            <ol className="flex list-decimal flex-col gap-1 pl-5 text-muted">
+              {EMAIL.beforeSteps.map((b) => (
+                <li key={b}>{b}</li>
+              ))}
+            </ol>
           </div>
-          <p role="status" aria-live="polite" className="min-h-6 text-sm font-medium text-link">
-            {toast}
-          </p>
+
+          {/* Sticky action bar, like a mail app's toolbar. */}
+          <div className="glass fixed inset-x-0 bottom-0 z-20 border-t border-line px-5 pb-[calc(12px+env(safe-area-inset-bottom))] pt-3">
+            <div className="mx-auto flex max-w-xl flex-wrap items-center justify-end gap-3">
+              <p role="status" aria-live="polite" className="mr-auto min-h-6 text-left text-[15px] font-semibold text-brand-700">
+                {toast}
+              </p>
+              <Button variant="secondary" size="lg" onClick={onOpen}>
+                {EMAIL.open}
+              </Button>
+              <Button size="lg" onClick={onCopy}>
+                {EMAIL.copy}
+              </Button>
+            </div>
+          </div>
         </>
       )}
 
-      <div className="flex flex-wrap gap-x-6 gap-y-1">
-        <Button variant="link" tone="ink" onClick={onChangeTone} className="text-base">
+      <div className="flex flex-wrap justify-center gap-x-6 gap-y-1">
+        <Button variant="link" tone="brand" onClick={onChangeTone} className="text-base font-semibold no-underline hover:underline">
           {EMAIL.changeTone}
         </Button>
-        <Button variant="link" tone="ink" onClick={onBack} className="text-base">
+        <Button variant="link" tone="muted" onClick={onBack} className="text-base no-underline hover:underline">
           {EMAIL.back}
         </Button>
       </div>
-      <p className="text-sm text-muted">{EMAIL.disclaimer}</p>
+      <p className="text-center text-sm text-muted">{EMAIL.disclaimer}</p>
     </section>
   );
 }

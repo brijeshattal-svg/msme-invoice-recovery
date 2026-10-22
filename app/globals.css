@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Light only, like the approved demo (ui-demos/02-apple.html). Dark tokens are kept below but only
+   apply when <html data-theme="dark"> is set, which the app never does today. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 /*
  * Design tokens: REDESIGN.md section 4. Every text/border pair was contrast-checked (WCAG AA).
  * Change a value only after re-checking it. Utilities (bg-canvas, text-ink, border-control,
@@ -24,7 +28,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root[data-theme="dark"] {
     --canvas: #0c0d10;
     --surface: #16181c;
     --ink: #f3f3f1;
@@ -94,6 +98,10 @@
 
 /* Geist comes from next/font via --font-sans (Tailwind preflight applies it to html).
    The old `font-family: Arial` here overrode it for the whole app. */
+html {
+  color-scheme: light;
+}
+
 body {
   background: var(--canvas);
   color: var(--ink);
@@ -126,4 +134,67 @@ main section[aria-labelledby] {
   background: color-mix(in srgb, var(--canvas) 90%, transparent);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+/* Demo 2 pieces that are clearer as CSS than as long utility strings. */
+.eyebrow {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--brand-700);
+  text-align: center;
+}
+.section-label {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.hero-title {
+  font-size: clamp(38px, 8vw, 64px);
+  line-height: 1.04;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  text-align: center;
+}
+.hero-number {
+  font-size: clamp(52px, 12vw, 88px);
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--brand-800);
+}
+.doc-icon {
+  width: 60px;
+  height: 72px;
+  margin: 0 auto 18px;
+  border-radius: 12px;
+  background: var(--brand-50);
+  border: 1.5px solid var(--brand-700);
+  position: relative;
+}
+.doc-icon::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 22px;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--brand-700);
+  box-shadow: 0 10px 0 var(--brand-700), 0 20px 0 var(--brand-700);
+}
+.mail-dots i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ff5f57;
+}
+.mail-dots i:nth-child(2) { background: #febc2e; }
+.mail-dots i:nth-child(3) { background: #28c840; }
+
+/* Selected tone card: a tick after the title (decorative; the radio carries the state). */
+label:has(input:checked) .tone-title::after {
+  content: "  ✓";
+  color: var(--brand-700);
 }

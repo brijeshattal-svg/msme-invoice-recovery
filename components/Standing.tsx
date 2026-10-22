@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
-import { RATE_HISTORY_START, lastRateChangeDate, type EngineResult, type MonthRow } from "@/lib/engine";
+import { useEffect, useLayoutEffect, useRef, type ReactNode } from "react";
+import { RATE_HISTORY_START, daysBetween, lastRateChangeDate, type EngineResult, type MonthRow } from "@/lib/engine";
 import { ELIGIBILITY, RATES, STANDING } from "@/lib/copy";
 import { rateFreshness } from "@/lib/standing";
 import { formatDate, formatINR, formatMonth, formatPercent } from "@/lib/format";
@@ -30,7 +30,7 @@ const rateText = (m: MonthRow) =>
 function Working({ rows }: { rows: MonthRow[] }) {
   const c = STANDING.columns;
   return (
-    <Disclosure summary={STANDING.workingTitle} className="@container rounded-card border-2 border-line" summaryClassName="p-4 text-base">
+    <Disclosure summary={STANDING.workingTitle} className="@container" summaryClassName="px-6 py-4 text-base text-link">
       {/* Wide container: a table. */}
       <div className="hidden overflow-x-auto px-4 pb-4 @lg:block">
         <table className="num w-full text-left text-sm">
@@ -109,13 +109,16 @@ export function Standing({ result, form, onBack, onTone, onReset, notes = [], as
   if (result.status === "overdue") {
     body = (
       <>
-        <div className="rounded-card bg-brand-50 p-5 text-ink">
-          <p className="text-base font-semibold leading-tight">
-            <span className="num block text-3xl font-bold sm:text-4xl">{formatINR(result.totalInterest)}</span>
-            <span className="mt-1 block text-lg">{STANDING.interestSuffix}</span>
+        <div className="rounded-hero bg-brand-50 px-7 py-11 text-center text-ink">
+          <p className="leading-tight">
+            <CountUp value={result.totalInterest} className="hero-number num block" />
+            <span className="mt-2.5 block text-xl font-semibold">{STANDING.interestSuffix}</span>
           </p>
-          <p className="num mt-3 text-base">{STANDING.totalNowDueLine(formatINR(result.totalDue))}</p>
-          <p className="mt-3 text-sm text-ink">{STANDING.legalLine}</p>
+          <p className="num mt-1.5 text-muted">{STANDING.totalNowDueLine(formatINR(result.totalDue))}</p>
+          <span className="num mt-4 inline-block rounded-full bg-warn-bg px-4 py-1.5 text-[15px] font-bold text-warn-ink">
+            {STANDING.daysLate(result.daysOverdue)}
+          </span>
+          <p className="mx-auto mt-4 max-w-[34em] text-[14.5px] text-muted">{STANDING.legalLine}</p>
         </div>
 
         {result.capped && (
@@ -124,28 +127,25 @@ export function Standing({ result, form, onBack, onTone, onReset, notes = [], as
           </Banner>
         )}
 
-        <dl className="num grid grid-cols-[1fr_auto] gap-x-4 gap-y-3 rounded-card border-2 border-line p-4 text-base">
-          <dt>{r.dueBy}</dt>
-          <dd className="text-right font-semibold">{formatDate(result.lastPayableDate)}</dd>
-          <dt>{r.interestFrom}</dt>
-          <dd className="text-right font-semibold">{formatDate(result.interestStartDate)}</dd>
-          <dt>{r.daysOverdue}</dt>
-          <dd className="text-right font-semibold">{result.daysOverdue}</dd>
-          <dt>{r.amount}</dt>
-          <dd className="text-right font-semibold">{formatINR(Number(form.amount))}</dd>
-          <dt>{r.interest}</dt>
-          <dd className="text-right font-semibold">{formatINR(result.totalInterest)}</dd>
-          <dt className="border-t-2 border-line pt-3 font-semibold">{r.total}</dt>
-          <dd className="border-t-2 border-line pt-3 text-right text-lg font-bold">{formatINR(result.totalDue)}</dd>
+        {asOf && <Timeline accepted={form.acceptanceDate} due={result.lastPayableDate} today={asOf} />}
+
+        <dl className="num rounded-hero bg-surface text-base shadow-raised">
+          <Row label={r.dueBy} value={formatDate(result.lastPayableDate)} />
+          <Row label={r.interestFrom} value={formatDate(result.interestStartDate)} />
+          <Row label={r.daysOverdue} value={String(result.daysOverdue)} />
+          <Row label={r.amount} value={formatINR(Number(form.amount))} />
+          <Row label={r.interest} value={formatINR(result.totalInterest)} />
+          <Row label={r.total} value={formatINR(result.totalDue)} strong />
         </dl>
 
-        <Working rows={result.rows} />
-
-        <section aria-labelledby="how-h" className="flex flex-col gap-2">
-          <h3 id="how-h" className="text-lg font-semibold">{STANDING.howTitle}</h3>
-          <p className="text-base leading-7">{STANDING.how}</p>
-          <p className="text-sm text-muted">{STANDING.ratesLoaded(formatDate(lastRateChangeDate()))}</p>
-        </section>
+        <div className="overflow-hidden rounded-hero bg-surface shadow-raised">
+          <Working rows={result.rows} />
+          <section aria-labelledby="how-h" className="flex flex-col gap-2 border-t border-line px-6 py-5">
+            <h3 id="how-h" className="font-semibold">{STANDING.howTitle}</h3>
+            <p className="text-base leading-7 text-muted">{STANDING.how}</p>
+            <p className="text-sm text-muted">{STANDING.ratesLoaded(formatDate(lastRateChangeDate()))}</p>
+          </section>
+        </div>
 
         {asOf && rateFreshness(asOf).stale && (
           <Banner tone="warn" size="sm" role="note" title={RATES.staleTitle}>
@@ -187,8 +187,9 @@ export function Standing({ result, form, onBack, onTone, onReset, notes = [], as
 
   return (
     <section aria-labelledby="standing-h" className="flex flex-col gap-6">
-      <h2 id="standing-h" ref={heading} tabIndex={-1} className="step-title outline-none">
+      <h2 id="standing-h" ref={heading} tabIndex={-1} className="eyebrow outline-none">
         {STANDING.title}
+        {asOf && <span className="num"> · {formatDate(asOf)}</span>}
       </h2>
       {shown.length > 0 && (
         <Banner tone="warn" size="sm" role="note" title={ELIGIBILITY.notesTitle}>
@@ -200,15 +201,91 @@ export function Standing({ result, form, onBack, onTone, onReset, notes = [], as
         </Banner>
       )}
       {body}
-      <div className="flex flex-col gap-3">
+      <p className="text-center text-sm text-muted">
+        {STANDING.notAdvice} {STANDING.figuresNote}
+      </p>
+      <div className="flex flex-col items-center gap-1.5">
         {actions}
-        <Button variant="link" tone="ink" onClick={onBack} className="self-start text-base">
+        <Button variant="link" tone="muted" onClick={onBack} className="text-[15px] no-underline hover:underline">
           {STANDING.back}
         </Button>
       </div>
-      <p className="text-sm text-muted">
-        {STANDING.notAdvice} {STANDING.figuresNote}
-      </p>
     </section>
+  );
+}
+
+function Row({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
+  return (
+    <div className="flex justify-between gap-4 border-b border-line px-6 py-4 last:border-b-0">
+      <dt className={strong ? "font-semibold" : "text-muted"}>{label}</dt>
+      <dd className={strong ? "text-right text-xl font-bold text-brand-800" : "text-right font-semibold"}>{value}</dd>
+    </div>
+  );
+}
+
+/**
+ * Accepted -> due -> today as a bar. Positions are layout only (how far along the bar to draw a
+ * dot); every date shown comes from the form or compute().
+ */
+function Timeline({ accepted, due, today }: { accepted: string; due: string; today: string }) {
+  const span = Math.max(1, daysBetween(accepted, today));
+  const at = (d: string) => 6 + (88 * Math.min(span, Math.max(0, daysBetween(accepted, d)))) / span;
+  const duePos = at(due);
+  return (
+    <div className="rounded-hero bg-surface px-7 pb-6 pt-8 shadow-raised">
+      <div className="relative pt-1" aria-hidden>
+        <div className="relative h-1.5 rounded-full bg-line">
+          <span className="absolute inset-y-0 rounded-full bg-[#e0a22b]" style={{ left: `${duePos}%`, right: "6%" }} />
+        </div>
+        {[at(accepted), duePos].map((left, i) => (
+          <span key={i} className="absolute top-[-5px] h-[18px] w-[18px] -translate-x-1/2 rounded-full border-4 border-brand-700 bg-surface" style={{ left: `${left}%` }} />
+        ))}
+        <span className="absolute top-[-5px] h-[18px] w-[18px] -translate-x-1/2 rounded-full border-4 border-[#e0a22b] bg-surface" style={{ left: "94%" }} />
+      </div>
+      <ol className="num mt-6 grid grid-cols-3 text-sm text-muted">
+        <li>
+          <b className="block text-base text-ink">{formatDate(accepted)}</b>
+          {STANDING.timeline.accepted}
+        </li>
+        <li className="text-center">
+          <b className="block text-base text-ink">{formatDate(due)}</b>
+          {STANDING.timeline.due}
+        </li>
+        <li className="text-right">
+          <b className="block text-base text-ink">{formatDate(today)}</b>
+          {STANDING.timeline.today}
+        </li>
+      </ol>
+    </div>
+  );
+}
+
+/**
+ * Shows the final amount (also on the server and for reduced motion); on screen it counts up from
+ * zero once. The number itself is never computed here, only animated towards.
+ */
+function CountUp({ value, className }: { value: number; className?: string }) {
+  const node = useRef<HTMLSpanElement>(null);
+  useLayoutEffect(() => {
+    const el = node.current;
+    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let raf = 0;
+    const t0 = performance.now();
+    const tick = (t: number) => {
+      const k = Math.min(1, (t - t0) / 900);
+      el.textContent = formatINR(k === 1 ? value : value * (1 - Math.pow(1 - k, 3)));
+      if (k < 1) raf = requestAnimationFrame(tick);
+    };
+    el.textContent = formatINR(0);
+    raf = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(raf);
+      el.textContent = formatINR(value);
+    };
+  }, [value]);
+  return (
+    <span ref={node} className={className}>
+      {formatINR(value)}
+    </span>
   );
 }

@@ -1,6 +1,13 @@
 // User-facing strings. Kept in one place so legal wording can be reviewed in one read.
 export const COPY = {
   headline: "Is your client paying you late? See what you may be owed and what to say.",
+  eyebrow: "The 45-day rule, on your side.",
+  heroLine1: "Your client is late.",
+  heroLine2: "Here's what you may be owed.",
+  heroSub: "Upload an overdue invoice. See if it's late under the law, how much interest may be owed, and send one polite email that keeps the client.",
+  chooseInvoice: "Choose invoice",
+  fileHint: "PDF or photo, up to 4 MB. Or drop it here.",
+  trust: ["MSMED Act Sections 15–16", "RBI rates checked", "Nothing stored", "You press send"],
   privacy: "Your file is sent to an AI service to be read. This app doesn't save it.",
   disclaimer: "Not legal advice. Calculates and drafts; you decide what to send.",
   reading: "Reading your invoice... about 10 seconds",
@@ -47,6 +54,8 @@ export const STANDING = {
   // overdue
   interestSuffix: "interest may be owed so far", // follows the big interest amount
   totalNowDueLine: (total: string) => `Total now due ${total}`,
+  daysLate: (n: number) => `${n} ${n === 1 ? "day" : "days"} late`,
+  timeline: { accepted: "Work accepted", due: "Payment due", today: "Today" },
   legalLine:
     "Under Section 16 of the MSMED Act, 2006, interest may be owed on a payment that is late beyond its due date.",
   rows: {
@@ -93,6 +102,10 @@ export const EMAIL = {
   toneHelp: "You can change it and redraft any time.",
   draftButton: "Draft my email",
   sendTitle: "Send it yourself",
+  sendSub: "Read it, edit it, send it from your own email.",
+  newMessage: "New message",
+  beforeTitle: "Before you send",
+  beforeSteps: ["Replace the highlighted placeholders.", "Send it from your own email address.", "Note the date you sent it."],
   writing: "Writing your email...",
   checkedChip: "Numbers checked against your calculation",
   templateChip: "Standard draft (AI was unavailable). Same checked figures; you can send it as is.",

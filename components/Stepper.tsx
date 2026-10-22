@@ -10,13 +10,13 @@ export function Stepper({ current }: { current: Step }) {
   return (
     <header className="glass sticky top-0 z-20 border-b border-line">
       <div className="mx-auto flex h-14 max-w-3xl items-center gap-3 px-5">
-        <span className="flex items-center gap-2 text-lg font-bold tracking-tight">
+        <span className="flex items-center gap-2 whitespace-nowrap text-lg font-bold tracking-tight">
           <span aria-hidden className="grid h-7 w-7 place-items-center rounded-lg bg-brand-700 text-xs font-extrabold text-on-brand">
             45
           </span>
           FortyFive
         </span>
-        <span className="num ml-auto text-sm text-muted" aria-live="polite">
+        <span className="num ml-auto whitespace-nowrap text-sm text-muted" aria-live="polite">
           {text}
         </span>
         <Help />

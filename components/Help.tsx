@@ -17,9 +17,10 @@ export function Help() {
         ref={opener}
         type="button"
         onClick={() => dialog.current?.showModal()}
-        className="min-h-11 rounded-full px-3 text-sm font-semibold text-link hover:bg-brand-50"
+        className="min-h-11 whitespace-nowrap rounded-full px-3 text-sm font-semibold text-link hover:bg-brand-50"
       >
-        {HELP.open}
+        <span className="sm:hidden">Help</span>
+        <span className="hidden sm:inline">{HELP.open}</span>
       </button>
       <dialog
         ref={dialog}

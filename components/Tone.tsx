@@ -17,14 +17,14 @@ export function ToneScreen({ tone, onSelect, onDraft, onBack }: Props) {
         <h2 id="tone-h" ref={heading} tabIndex={-1} className="step-title outline-none">
           {EMAIL.toneTitle}
         </h2>
-        <p className="mt-1 text-base text-muted">{EMAIL.toneHelp}</p>
+        <p className="mt-4 text-lg text-muted">{EMAIL.toneHelp}</p>
       </div>
 
-      <div role="radiogroup" aria-labelledby="tone-h" className="flex flex-col gap-3">
+      <div role="radiogroup" aria-labelledby="tone-h" className="flex flex-col gap-3.5">
         {TONE_IDS.map((id) => (
           <label
             key={id}
-            className="flex min-h-20 cursor-pointer flex-col justify-center gap-1 rounded-card border-2 border-line bg-surface p-5 shadow-card transition has-[:checked]:border-brand-700 has-[:checked]:shadow-[0_0_0_4px_color-mix(in_srgb,var(--brand-700)_22%,transparent)] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand-600"
+            className="flex min-h-20 cursor-pointer flex-col justify-center gap-1 rounded-[22px] border-[1.5px] border-line bg-surface px-6 py-5 shadow-card transition has-[:checked]:border-brand-700 has-[:checked]:shadow-[0_0_0_4px_color-mix(in_srgb,var(--brand-700)_22%,transparent)] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand-600"
           >
             <input
               type="radio"
@@ -34,17 +34,17 @@ export function ToneScreen({ tone, onSelect, onDraft, onBack }: Props) {
               onChange={() => onSelect(id)}
               className="sr-only"
             />
-            <span className="text-lg font-semibold">{TONES[id].label}</span>
+            <span className="tone-title text-xl font-semibold tracking-tight">{TONES[id].label}</span>
             <span className="text-base text-muted">{TONES[id].when}</span>
           </label>
         ))}
       </div>
 
-      <div className="flex flex-col gap-3">
-        <Button size="lg" onClick={onDraft}>
+      <div className="mt-2 flex flex-col items-center gap-1.5">
+        <Button size="lg" onClick={onDraft} className="px-7">
           {EMAIL.draftButton}
         </Button>
-        <Button variant="link" tone="ink" onClick={onBack} className="self-start text-base">
+        <Button variant="link" tone="muted" onClick={onBack} className="text-[15px] no-underline hover:underline">
           {EMAIL.back}
         </Button>
       </div>

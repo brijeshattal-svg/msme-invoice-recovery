@@ -1,16 +1,18 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { COPY, ELIGIBILITY } from "@/lib/copy";
 import { eligibilityNotes } from "@/lib/standing";
 import { todayIST } from "@/lib/today";
 import { validateForm, type Action, type FieldKey, type FormErrors, type State } from "@/lib/wizard";
 import { Banner } from "./ui/Banner";
 import { Button } from "./ui/Button";
+import { cx } from "./ui/cx";
 import { Field } from "./ui/Field";
 
 type Props = { state: State; dispatch: (a: Action) => void; onSubmit: () => void };
 
+// Layout follows the approved demo (ui-demos/02-apple.html, screen 2): grouped cards of rows.
 export function Confirm({ state, dispatch, onSubmit }: Props) {
   const heading = useRef<HTMLHeadingElement>(null);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -33,11 +35,11 @@ export function Confirm({ state, dispatch, onSubmit }: Props) {
 
   return (
     <form onSubmit={submit} noValidate aria-labelledby="check-h" className="flex flex-col gap-6">
-      <div>
+      <div className="text-center">
         <h2 id="check-h" ref={heading} tabIndex={-1} className="step-title outline-none">
           Check the details
         </h2>
-        <p className="mt-1 text-base text-muted">
+        <p className="mx-auto mt-4 max-w-[30em] text-lg text-muted">
           We filled these in from your invoice. Please correct anything that&apos;s wrong.
         </p>
       </div>
@@ -57,43 +59,45 @@ export function Confirm({ state, dispatch, onSubmit }: Props) {
         )}
       </div>
 
-      <Field id="f-clientName" label="Client name" flag={flagged.clientName} error={errors.clientName}>
-        {(cls, d) => <input id="f-clientName" className={cls} aria-describedby={d} aria-invalid={!!errors.clientName} value={form.clientName} onChange={set("clientName")} autoComplete="off" />}
-      </Field>
-      <Field id="f-invoiceNumber" label="Invoice number" flag={flagged.invoiceNumber} error={errors.invoiceNumber}>
-        {(cls, d) => <input id="f-invoiceNumber" className={cls} aria-describedby={d} aria-invalid={!!errors.invoiceNumber} value={form.invoiceNumber} onChange={set("invoiceNumber")} autoComplete="off" />}
-      </Field>
-      <Field id="f-invoiceDate" label="Invoice date" flag={flagged.invoiceDate} error={errors.invoiceDate}>
-        {(cls, d) => <input id="f-invoiceDate" type="date" max={today} className={`${cls} num`} aria-describedby={d} aria-invalid={!!errors.invoiceDate} value={form.invoiceDate} onChange={set("invoiceDate")} />}
-      </Field>
-      <Field id="f-amount" label="Invoice amount (₹, including GST)" flag={flagged.amount} error={errors.amount}>
-        {(cls, d) => <input id="f-amount" type="number" inputMode="decimal" min="0" step="0.01" className={`${cls} num`} aria-describedby={d} aria-invalid={!!errors.amount} value={form.amount} onChange={set("amount")} />}
-      </Field>
+      <Group label="From your invoice">
+        <Field id="f-clientName" label="Client name" flag={flagged.clientName} error={errors.clientName}>
+          {(cls, d) => <input id="f-clientName" className={cls} aria-describedby={d} aria-invalid={!!errors.clientName} value={form.clientName} onChange={set("clientName")} autoComplete="off" />}
+        </Field>
+        <Field id="f-invoiceNumber" label="Invoice number" flag={flagged.invoiceNumber} error={errors.invoiceNumber}>
+          {(cls, d) => <input id="f-invoiceNumber" className={cls} aria-describedby={d} aria-invalid={!!errors.invoiceNumber} value={form.invoiceNumber} onChange={set("invoiceNumber")} autoComplete="off" />}
+        </Field>
+        <Field id="f-invoiceDate" label="Invoice date" flag={flagged.invoiceDate} error={errors.invoiceDate}>
+          {(cls, d) => <input id="f-invoiceDate" type="date" max={today} className={`${cls} num`} aria-describedby={d} aria-invalid={!!errors.invoiceDate} value={form.invoiceDate} onChange={set("invoiceDate")} />}
+        </Field>
+        <Field id="f-amount" label="Amount (₹, incl. GST)" flag={flagged.amount} error={errors.amount}>
+          {(cls, d) => <input id="f-amount" type="number" inputMode="decimal" min="0" step="0.01" className={`${cls} num`} aria-describedby={d} aria-invalid={!!errors.amount} value={form.amount} onChange={set("amount")} />}
+        </Field>
+      </Group>
 
-      <fieldset className="flex flex-col gap-6 rounded-card border-2 border-line p-4">
-        <legend className="px-2 text-lg font-semibold">Three things only you know</legend>
-
-        <Field id="f-udyamDate" label="Your Udyam registration date" help={COPY.udyamHelp} error={errors.udyamDate}>
+      <Group label="Only you know these">
+        <Field id="f-udyamDate" label="Udyam registration date" help={COPY.udyamHelp} error={errors.udyamDate}>
           {(cls, d) => <input id="f-udyamDate" type="date" max={today} className={`${cls} num`} aria-describedby={d} aria-invalid={!!errors.udyamDate} value={form.udyamDate} onChange={set("udyamDate")} />}
         </Field>
 
-        <div className="flex flex-col gap-2" role="radiogroup" aria-labelledby="agree-l">
+        <div className="grid gap-x-4 gap-y-1.5 border-b border-line py-4 sm:grid-cols-[170px_1fr] sm:items-center">
           <p id="agree-l" className="text-base font-semibold">
-            Do you have a written payment agreement with this client?
+            Written payment agreement?
           </p>
-          <div className="flex gap-3">
-            {[true, false].map((v) => (
-              <label
-                key={String(v)}
-                className="flex min-h-12 flex-1 cursor-pointer items-center justify-center rounded-input border-2 border-control px-4 text-base font-medium has-[:checked]:border-brand-700 has-[:checked]:bg-brand-50 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-brand-600"
-              >
-                <input type="radio" name="agreement" className="sr-only" checked={form.hasAgreement === v} onChange={() => dispatch({ type: "edit", field: "hasAgreement", value: v })} />
-                {v ? "Yes" : "No"}
-              </label>
-            ))}
-          </div>
-          <p className="text-sm text-muted">{COPY.agreementNote}</p>
-          {termsHint && <p className="text-sm font-medium text-ink">Your invoice says: {termsHint}</p>}
+          <Segmented
+            name="agreement"
+            labelledBy="agree-l"
+            options={[
+              { value: "no", label: "No" },
+              { value: "yes", label: "Yes" },
+            ]}
+            value={form.hasAgreement ? "yes" : "no"}
+            onChange={(v) => dispatch({ type: "edit", field: "hasAgreement", value: v === "yes" })}
+            className="sm:justify-self-end"
+          />
+          <p className="text-sm text-muted sm:col-start-2">
+            {termsHint && <span className="font-medium text-ink">Your invoice says {termsHint}. </span>}
+            {COPY.agreementNote}
+          </p>
         </div>
 
         {form.hasAgreement && (
@@ -102,31 +106,40 @@ export function Confirm({ state, dispatch, onSubmit }: Props) {
           </Field>
         )}
 
-        <Field id="f-acceptanceDate" label="Date the client accepted the work" help={COPY.acceptanceHelp} error={errors.acceptanceDate}>
+        <Field id="f-acceptanceDate" label="Work accepted on" help={COPY.acceptanceHelp} error={errors.acceptanceDate}>
           {(cls, d) => <input id="f-acceptanceDate" type="date" className={`${cls} num`} aria-describedby={d} aria-invalid={!!errors.acceptanceDate} value={form.acceptanceDate} onChange={set("acceptanceDate")} />}
         </Field>
-      </fieldset>
+      </Group>
 
-      <fieldset className="flex flex-col gap-5 rounded-card border-2 border-line p-4">
-        <legend className="px-2 text-lg font-semibold">{ELIGIBILITY.title}</legend>
-        <p className="text-sm text-muted">{ELIGIBILITY.intro}</p>
-        <Choice
-          name="enterprise"
-          question={ELIGIBILITY.enterpriseQ}
-          options={ELIGIBILITY.enterpriseOptions}
-          value={state.eligibility.enterprise}
-          onChange={(v) => dispatch({ type: "eligibility", field: "enterprise", value: v })}
-        />
-        <Choice
-          name="buyerInIndia"
-          question={ELIGIBILITY.buyerQ}
-          options={ELIGIBILITY.buyerOptions}
-          value={state.eligibility.buyerInIndia}
-          onChange={(v) => dispatch({ type: "eligibility", field: "buyerInIndia", value: v })}
-        />
+      <Group label={ELIGIBILITY.title}>
+        <p className="pt-4 text-sm text-muted">{ELIGIBILITY.intro}</p>
+        <div className="flex flex-col gap-2 border-b border-line py-4">
+          <p id="q-enterprise" className="text-base font-semibold">
+            {ELIGIBILITY.enterpriseQ}
+          </p>
+          <Segmented
+            name="enterprise"
+            labelledBy="q-enterprise"
+            options={ELIGIBILITY.enterpriseOptions}
+            value={state.eligibility.enterprise}
+            onChange={(v) => dispatch({ type: "eligibility", field: "enterprise", value: v })}
+          />
+        </div>
+        <div className="flex flex-col gap-2 py-4">
+          <p id="q-buyerInIndia" className="text-base font-semibold">
+            {ELIGIBILITY.buyerQ}
+          </p>
+          <Segmented
+            name="buyerInIndia"
+            labelledBy="q-buyerInIndia"
+            options={ELIGIBILITY.buyerOptions}
+            value={state.eligibility.buyerInIndia}
+            onChange={(v) => dispatch({ type: "eligibility", field: "buyerInIndia", value: v })}
+          />
+        </div>
         <div aria-live="polite">
           {notes.length > 0 && (
-            <Banner tone="warn" size="sm" role="note" title={ELIGIBILITY.notesTitle}>
+            <Banner tone="warn" size="sm" role="note" title={ELIGIBILITY.notesTitle} className="mb-5">
               <ul className="flex list-disc flex-col gap-1 pl-5">
                 {notes.map((n) => (
                   <li key={n}>{n}</li>
@@ -135,52 +148,57 @@ export function Confirm({ state, dispatch, onSubmit }: Props) {
             </Banner>
           )}
         </div>
-      </fieldset>
+      </Group>
 
-      <div className="flex flex-col gap-3">
-        <Button type="submit" size="lg">
+      <div className="mt-2 flex flex-col items-center gap-1.5">
+        <Button type="submit" size="lg" className="px-7">
           Check what I may be owed
         </Button>
-        <Button variant="link" tone="ink" onClick={() => dispatch({ type: "go", step: "upload" })} className="self-start text-base">
+        <Button variant="link" tone="muted" onClick={() => dispatch({ type: "go", step: "upload" })} className="text-[15px] no-underline hover:underline">
           Back
         </Button>
       </div>
-      <p className="text-sm text-muted">Not legal advice.</p>
+      <p className="text-center text-sm text-muted">Not legal advice.</p>
     </form>
   );
 }
 
-/** A labelled row of radio "pills"; one answer, changeable, optional. */
-function Choice({
+/** Small uppercase label above a white rounded card of rows (demo 2). */
+function Group({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <section className="flex flex-col gap-2">
+      <h3 className="section-label">{label}</h3>
+      <div className="rounded-hero bg-surface px-6 py-1 shadow-raised">{children}</div>
+    </section>
+  );
+}
+
+/** iOS-style segmented control: one answer, changeable. Wraps on narrow screens. */
+function Segmented({
   name,
-  question,
+  labelledBy,
   options,
   value,
   onChange,
+  className,
 }: {
   name: string;
-  question: string;
+  labelledBy: string;
   options: readonly { value: string; label: string }[];
   value: string;
   onChange: (v: string) => void;
+  className?: string;
 }) {
-  const id = `q-${name}`;
   return (
-    <div className="flex flex-col gap-2" role="radiogroup" aria-labelledby={id}>
-      <p id={id} className="text-base font-semibold">
-        {question}
-      </p>
-      <div className="flex flex-wrap gap-2">
-        {options.map((o) => (
-          <label
-            key={o.value}
-            className="flex min-h-11 cursor-pointer items-center rounded-full border-2 border-control px-4 text-base font-medium has-[:checked]:border-brand-700 has-[:checked]:bg-brand-50 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-brand-600"
-          >
-            <input type="radio" name={name} className="sr-only" checked={value === o.value} onChange={() => onChange(o.value)} />
+    <div role="radiogroup" aria-labelledby={labelledBy} className={cx("flex w-fit flex-wrap gap-[3px] rounded-xl bg-line p-[3px]", className)}>
+      {options.map((o) => (
+        <label key={o.value} className="relative cursor-pointer">
+          <input type="radio" name={name} className="peer sr-only" checked={value === o.value} onChange={() => onChange(o.value)} />
+          <span className="grid min-h-10 min-w-[76px] place-items-center rounded-[9px] px-3.5 text-[15px] font-semibold text-ink transition peer-checked:bg-surface peer-checked:shadow-[0_1px_3px_rgb(0_0_0/0.18)] peer-focus-visible:outline-2 peer-focus-visible:outline-brand-600">
             {o.label}
-          </label>
-        ))}
-      </div>
+          </span>
+        </label>
+      ))}
     </div>
   );
 }

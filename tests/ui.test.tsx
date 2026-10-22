@@ -101,10 +101,14 @@ describe("Field", () => {
     expect(decoded(render({ flag: "check" }))).toContain(COPY.pleaseCheck);
   });
 
-  it("picks the border from state: error > flag > default", () => {
-    expect(classOf(render({ error: "x", flag: "check" }), "input")).toContain("border-danger");
-    expect(classOf(render({ flag: "check" }), "input")).toContain("border-warn-ink");
-    expect(classOf(render(), "input")).toContain("border-control");
+  it("marks the input from state: error ring > flag fill > plain (borderless rows, demo 2)", () => {
+    const err = classOf(render({ error: "x", flag: "check" }), "input");
+    expect(err).toContain("ring-danger");
+    expect(err).not.toContain("bg-warn-bg");
+    expect(classOf(render({ flag: "check" }), "input")).toContain("bg-warn-bg");
+    const plain = classOf(render(), "input");
+    expect(plain).not.toContain("ring-danger");
+    expect(plain).not.toContain("bg-warn-bg");
   });
 
   it("inputs are at least 48px tall", () => {
