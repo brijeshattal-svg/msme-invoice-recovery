@@ -1,0 +1,824 @@
+[
+  {
+    "id": "one-day-hand-check",
+    "note": "1 day overdue at 16.50% on 100000: 100000*0.165/365 = 45.205... => 45.21 (hand-checkable)",
+    "input": {
+      "invoiceDate": "2026-01-01",
+      "udyamDate": "2024-06-01",
+      "agreementDays": null,
+      "amount": 100000,
+      "acceptanceDate": "2026-01-01",
+      "asOf": "2026-01-17"
+    },
+    "expected": {
+      "status": "overdue",
+      "termDays": 15,
+      "capped": false,
+      "lastPayableDate": "2026-01-16",
+      "interestStartDate": "2026-01-17",
+      "daysOverdue": 1,
+      "rows": [
+        {
+          "month": "2026-01",
+          "openingBalance": 100000,
+          "days": 1,
+          "segments": [
+            {
+              "bankRate": 5.5,
+              "section16Rate": 16.5,
+              "days": 1
+            }
+          ],
+          "interest": 45.21,
+          "closingBalance": 100045.21
+        }
+      ],
+      "totalInterest": 45.21,
+      "totalDue": 100045.21
+    }
+  },
+  {
+    "id": "single-month-no-agreement",
+    "note": "No agreement => 15-day rule, interest within one month at one rate",
+    "input": {
+      "invoiceDate": "2026-01-01",
+      "udyamDate": "2024-06-01",
+      "agreementDays": null,
+      "amount": 100000,
+      "acceptanceDate": "2026-01-01",
+      "asOf": "2026-01-31"
+    },
+    "expected": {
+      "status": "overdue",
+      "termDays": 15,
+      "capped": false,
+      "lastPayableDate": "2026-01-16",
+      "interestStartDate": "2026-01-17",
+      "daysOverdue": 15,
+      "rows": [
+        {
+          "month": "2026-01",
+          "openingBalance": 100000,
+          "days": 15,
+          "segments": [
+            {
+              "bankRate": 5.5,
+              "section16Rate": 16.5,
+              "days": 15
+            }
+          ],
+          "interest": 678.08,
+          "closingBalance": 100678.08
+        }
+      ],
+      "totalInterest": 678.08,
+      "totalDue": 100678.08
+    }
+  },
+  {
+    "id": "rate-change-crossing-7-oct-2026",
+    "note": "Crosses 7 Oct 2026: 16.50% before, 17.25% from that day",
+    "input": {
+      "invoiceDate": "2026-08-01",
+      "udyamDate": "2024-06-01",
+      "agreementDays": null,
+      "amount": 250000,
+      "acceptanceDate": "2026-08-01",
+      "asOf": "2026-10-22"
+    },
+    "expected": {
+      "status": "overdue",
+      "termDays": 15,
+      "capped": false,
+      "lastPayableDate": "2026-08-16",
+      "interestStartDate": "2026-08-17",
+      "daysOverdue": 67,
+      "rows": [
+        {
+          "month": "2026-08",
+          "openingBalance": 250000,
+          "days": 15,
+          "segments": [
+            {
+              "bankRate": 5.5,
+              "section16Rate": 16.5,
+              "days": 15
+            }
+          ],
+          "interest": 1695.21,
+          "closingBalance": 251695.21
+        },
+        {
+          "month": "2026-09",
+          "openingBalance": 251695.21,
+          "days": 30,
+          "segments": [
+            {
+              "bankRate": 5.5,
+              "section16Rate": 16.5,
+              "days": 30
+            }
+          ],
+          "interest": 3413.4,
+          "closingBalance": 255108.61
+        },
+        {
+          "month": "2026-10",
+          "openingBalance": 255108.61,
+          "days": 22,
+          "segments": [
+            {
+              "bankRate": 5.5,
+              "section16Rate": 16.5,
+              "days": 6
+            },
+            {
+              "bankRate": 5.75,
+              "section16Rate": 17.25,
+              "days": 16
+            }
+          ],
+          "interest": 2620.98,
+          "closingBalance": 257729.59
+        }
+      ],
+      "totalInterest": 7729.59,
+      "totalDue": 257729.59
+    }
+  },
+  {
+    "id": "multi-month-compounding",
+    "note": "Several full months => monthly rests compound",
+    "input": {
+      "invoiceDate": "2025-08-01",
+      "udyamDate": "2024-06-01",
+      "agreementDays": null,
+      "amount": 500000,
+      "acceptanceDate": "2025-08-01",
+      "asOf": "2026-02-28"
+    },
+    "expected": {
+      "status": "overdue",
+      "termDays": 15,
+      "capped": false,
+      "lastPayableDate": "2025-08-16",
+      "interestStartDate": "2025-08-17",
+      "daysOverdue": 196,
+      "rows": [
+        {
+          "month": "2025-08",
+          "openingBalance": 500000,
+          "days": 15,
+          "segments": [
+            {
+              "bankRate": 5.75,
+              "section16Rate": 17.25,
+              "days": 15
+            }
+          ],
+          "interest": 3544.52,
+          "closingBalance": 503544.52
+        },
+        {
+          "month": "2025-09",
+          "openingBalance": 503544.52,
+          "days": 30,
+          "segments": [
+            {
+              "bankRate": 5.75,
+              "section16Rate": 17.25,
+              "days": 30
+            }
+          ],
+          "interest": 7139.3,
+          "closingBalance": 510683.82
+        },
+        {
+          "month": "2025-10",
+          "openingBalance": 510683.82,
+          "days": 31,
+          "segments": [
+            {
+              "bankRate": 5.75,
+              "section16Rate": 17.25,
+              "days": 31
+            }
+          ],
+          "interest": 7481.87,
+          "closingBalance": 518165.69
+        },
+        {
+          "month": "2025-11",
+          "openingBalance": 518165.69,
+          "days": 30,
+          "segments": [
+            {
+              "bankRate": 5.75,
+              "section16Rate": 17.25,
+              "days": 30
+            }
+          ],
+          "interest": 7346.6,
+          "closingBalance": 525512.29
+        },
+        {
+          "month": "2025-12",
+          "openingBalance": 525512.29,
+          "days": 31,
+          "segments": [
+            {
+              "bankRate": 5.75,
+              "section16Rate": 17.25,
+              "days": 4
+            },
+            {
+              "bankRate": 5.5,
+              "section16Rate": 16.5,
+              "days": 27
+            }
+          ],
+          "interest": 7407.56,
+          "closingBalance": 532919.85
+        },
+        {
+          "month": "2026-01",
+          "openingBalance": 532919.85,
+          "days": 31,
+          "segments": [
+            {
+              "bankRate": 5.5,
+              "section16Rate": 16.5,
+              "days": 31
+            }
+          ],
+          "interest": 7468.18,
+          "closingBalance": 540388.03
+        },
+        {
+          "month": "2026-02",
+          "openingBalance": 540388.03,
+          "days": 28,
+          "segments": [
+            {
+              "bankRate": 5.5,
+              "section16Rate": 16.5,
+              "days": 28
+            }
+          ],
+          "interest": 6839.98,
+          "closingBalance": 547228.01
+        }
+      ],
+      "totalInterest": 47228.01,
+      "totalDue": 547228.01
+    }
+  },
+  {
+    "id": "agreement-60-capped-to-45",
+    "note": "Agreement of 60 days is capped at 45",
+    "input": {
+      "invoiceDate": "2026-05-10",
+      "udyamDate": "2024-06-01",
+      "agreementDays": 60,
+      "amount": 120000,
+      "acceptanceDate": "2026-05-10",
+      "asOf": "2026-08-20"
+    },
+    "expected": {
+      "status": "overdue",
+      "termDays": 45,
+      "capped": true,
+      "lastPayableDate": "2026-06-24",
+      "interestStartDate": "2026-06-25",
+      "daysOverdue": 57,
+      "rows": [
+        {
+          "month": "2026-06",
+          "openingBalance": 120000,
+          "days": 6,
+          "segments": [
+            {
+              "bankRate": 5.5,
+              "section16Rate": 16.5,
+              "days": 6
+            }
+          ],
+          "interest": 325.48,
+          "closingBalance": 120325.48
+        },
+        {
+          "month": "2026-07",
+          "openingBalance": 120325.48,
+          "days": 31,
+          "segments": [
+            {
+              "bankRate": 5.5,
+              "section16Rate": 16.5,
+              "days": 31
+            }
+          ],
+          "interest": 1686.21,
+          "closingBalance": 122011.69
+        },
+        {
+          "month": "2026-08",
+          "openingBalance": 122011.69,
+          "days": 20,
+          "segments": [
+            {
+              "bankRate": 5.5,
+              "section16Rate": 16.5,
+              "days": 20
+            }
+          ],
+          "interest": 1103.12,
+          "closingBalance": 123114.81
+        }
+      ],
+      "totalInterest": 3114.81,
+      "totalDue": 123114.81
+    }
+  },
+  {
+    "id": "agreement-30-respected",
+    "note": "Agreement of 30 days (<=45) is used as is",
+    "input": {
+      "invoiceDate": "2026-05-10",
+      "udyamDate": "2024-06-01",
+      "agreementDays": 30,
+      "amount": 120000,
+      "acceptanceDate": "2026-05-10",
+      "asOf": "2026-08-20"
+    },
+    "expected": {
+      "status": "overdue",
+      "termDays": 30,
+      "capped": false,
+      "lastPayableDate": "2026-06-09",
+      "interestStartDate": "2026-06-10",
+      "daysOverdue": 72,
+      "rows": [
+        {
+          "month": "2026-06",
+          "openingBalance": 120000,
+          "days": 21,
+          "segments": [
+            {
+              "bankRate": 5.5,
+              "section16Rate": 16.5,
+              "days": 21
+            }
+          ],
+          "interest": 1139.18,
+          "closingBalance": 121139.18
+        },
+        {
+          "month": "2026-07",
+          "openingBalance": 121139.18,
+          "days": 31,
+          "segments": [
+            {
+              "bankRate": 5.5,
+              "section16Rate": 16.5,
+              "days": 31
+            }
+          ],
+          "interest": 1697.61,
+          "closingBalance": 122836.79
+        },
+        {
+          "month": "2026-08",
+          "openingBalance": 122836.79,
+          "days": 20,
+          "segments": [
+            {
+              "bankRate": 5.5,
+              "section16Rate": 16.5,
+              "days": 20
+            }
+          ],
+          "interest": 1110.58,
+          "closingBalance": 123947.37
+        }
+      ],
+      "totalInterest": 3947.37,
+      "totalDue": 123947.37
+    }
+  },
+  {
+    "id": "deemed-acceptance-later-than-invoice",
+    "note": "Acceptance date later than invoice date shifts the due date",
+    "input": {
+      "invoiceDate": "2026-03-01",
+      "udyamDate": "2024-06-01",
+      "agreementDays": null,
+      "amount": 80000,
+      "acceptanceDate": "2026-03-10",
+      "asOf": "2026-06-30"
+    },
+    "expected": {
+      "status": "overdue",
+      "termDays": 15,
+      "capped": false,
+      "lastPayableDate": "2026-03-25",
+      "interestStartDate": "2026-03-26",
+      "daysOverdue": 97,
+      "rows": [
+        {
+          "month": "2026-03",
+          "openingBalance": 80000,
+          "days": 6,
+          "segments": [
+            {
+              "bankRate": 5.5,
+              "section16Rate": 16.5,
+              "days": 6
+            }
+          ],
+          "interest": 216.99,
+          "closingBalance": 80216.99
+        },
+        {
+          "month": "2026-04",
+          "openingBalance": 80216.99,
+          "days": 30,
+          "segments": [
+            {
+              "bankRate": 5.5,
+              "section16Rate": 16.5,
+              "days": 30
+            }
+          ],
+          "interest": 1087.87,
+          "closingBalance": 81304.86
+        },
+        {
+          "month": "2026-05",
+          "openingBalance": 81304.86,
+          "days": 31,
+          "segments": [
+            {
+              "bankRate": 5.5,
+              "section16Rate": 16.5,
+              "days": 31
+            }
+          ],
+          "interest": 1139.38,
+          "closingBalance": 82444.24
+        },
+        {
+          "month": "2026-06",
+          "openingBalance": 82444.24,
+          "days": 30,
+          "segments": [
+            {
+              "bankRate": 5.5,
+              "section16Rate": 16.5,
+              "days": 30
+            }
+          ],
+          "interest": 1118.08,
+          "closingBalance": 83562.32
+        }
+      ],
+      "totalInterest": 3562.32,
+      "totalDue": 83562.32
+    }
+  },
+  {
+    "id": "across-several-rate-cuts",
+    "note": "Long span across 2025 cuts (6.50 -> 6.25 -> 5.75 -> 5.50)",
+    "input": {
+      "invoiceDate": "2025-01-01",
+      "udyamDate": "2024-06-01",
+      "agreementDays": null,
+      "amount": 300000,
+      "acceptanceDate": "2025-01-01",
+      "asOf": "2026-01-15"
+    },
+    "expected": {
+      "status": "overdue",
+      "termDays": 15,
+      "capped": false,
+      "lastPayableDate": "2025-01-16",
+      "interestStartDate": "2025-01-17",
+      "daysOverdue": 364,
+      "rows": [
+        {
+          "month": "2025-01",
+          "openingBalance": 300000,
+          "days": 15,
+          "segments": [
+            {
+              "bankRate": 6.75,
+              "section16Rate": 20.25,
+              "days": 15
+            }
+          ],
+          "interest": 2496.58,
+          "closingBalance": 302496.58
+        },
+        {
+          "month": "2025-02",
+          "openingBalance": 302496.58,
+          "days": 28,
+          "segments": [
+            {
+              "bankRate": 6.75,
+              "section16Rate": 20.25,
+              "days": 6
+            },
+            {
+              "bankRate": 6.5,
+              "section16Rate": 19.5,
+              "days": 22
+            }
+          ],
+          "interest": 4562.31,
+          "closingBalance": 307058.89
+        },
+        {
+          "month": "2025-03",
+          "openingBalance": 307058.89,
+          "days": 31,
+          "segments": [
+            {
+              "bankRate": 6.5,
+              "section16Rate": 19.5,
+              "days": 31
+            }
+          ],
+          "interest": 5085.4,
+          "closingBalance": 312144.29
+        },
+        {
+          "month": "2025-04",
+          "openingBalance": 312144.29,
+          "days": 30,
+          "segments": [
+            {
+              "bankRate": 6.5,
+              "section16Rate": 19.5,
+              "days": 8
+            },
+            {
+              "bankRate": 6.25,
+              "section16Rate": 18.75,
+              "days": 22
+            }
+          ],
+          "interest": 4861.75,
+          "closingBalance": 317006.04
+        },
+        {
+          "month": "2025-05",
+          "openingBalance": 317006.04,
+          "days": 31,
+          "segments": [
+            {
+              "bankRate": 6.25,
+              "section16Rate": 18.75,
+              "days": 31
+            }
+          ],
+          "interest": 5048.21,
+          "closingBalance": 322054.25
+        },
+        {
+          "month": "2025-06",
+          "openingBalance": 322054.25,
+          "days": 30,
+          "segments": [
+            {
+              "bankRate": 6.25,
+              "section16Rate": 18.75,
+              "days": 5
+            },
+            {
+              "bankRate": 5.75,
+              "section16Rate": 17.25,
+              "days": 25
+            }
+          ],
+          "interest": 4632.29,
+          "closingBalance": 326686.54
+        },
+        {
+          "month": "2025-07",
+          "openingBalance": 326686.54,
+          "days": 31,
+          "segments": [
+            {
+              "bankRate": 5.75,
+              "section16Rate": 17.25,
+              "days": 31
+            }
+          ],
+          "interest": 4786.18,
+          "closingBalance": 331472.72
+        },
+        {
+          "month": "2025-08",
+          "openingBalance": 331472.72,
+          "days": 31,
+          "segments": [
+            {
+              "bankRate": 5.75,
+              "section16Rate": 17.25,
+              "days": 31
+            }
+          ],
+          "interest": 4856.3,
+          "closingBalance": 336329.02
+        },
+        {
+          "month": "2025-09",
+          "openingBalance": 336329.02,
+          "days": 30,
+          "segments": [
+            {
+              "bankRate": 5.75,
+              "section16Rate": 17.25,
+              "days": 30
+            }
+          ],
+          "interest": 4768.5,
+          "closingBalance": 341097.52
+        },
+        {
+          "month": "2025-10",
+          "openingBalance": 341097.52,
+          "days": 31,
+          "segments": [
+            {
+              "bankRate": 5.75,
+              "section16Rate": 17.25,
+              "days": 31
+            }
+          ],
+          "interest": 4997.31,
+          "closingBalance": 346094.83
+        },
+        {
+          "month": "2025-11",
+          "openingBalance": 346094.83,
+          "days": 30,
+          "segments": [
+            {
+              "bankRate": 5.75,
+              "section16Rate": 17.25,
+              "days": 30
+            }
+          ],
+          "interest": 4906.96,
+          "closingBalance": 351001.79
+        },
+        {
+          "month": "2025-12",
+          "openingBalance": 351001.79,
+          "days": 31,
+          "segments": [
+            {
+              "bankRate": 5.75,
+              "section16Rate": 17.25,
+              "days": 4
+            },
+            {
+              "bankRate": 5.5,
+              "section16Rate": 16.5,
+              "days": 27
+            }
+          ],
+          "interest": 4947.68,
+          "closingBalance": 355949.47
+        },
+        {
+          "month": "2026-01",
+          "openingBalance": 355949.47,
+          "days": 15,
+          "segments": [
+            {
+              "bankRate": 5.5,
+              "section16Rate": 16.5,
+              "days": 15
+            }
+          ],
+          "interest": 2413.63,
+          "closingBalance": 358363.1
+        }
+      ],
+      "totalInterest": 58363.1,
+      "totalDue": 358363.1
+    }
+  },
+  {
+    "id": "last-payable-day-is-today",
+    "note": "Today is the last day to pay => not yet due, 0 days left",
+    "input": {
+      "invoiceDate": "2026-10-07",
+      "udyamDate": "2024-06-01",
+      "agreementDays": null,
+      "amount": 100000,
+      "acceptanceDate": "2026-10-07",
+      "asOf": "2026-10-22"
+    },
+    "expected": {
+      "status": "not_yet_due",
+      "termDays": 15,
+      "capped": false,
+      "lastPayableDate": "2026-10-22",
+      "interestStartDate": "2026-10-23",
+      "daysLeft": 0
+    }
+  },
+  {
+    "id": "not-yet-due-10-days-left",
+    "note": "Not yet due, 10 days left",
+    "input": {
+      "invoiceDate": "2026-10-17",
+      "udyamDate": "2024-06-01",
+      "agreementDays": null,
+      "amount": 100000,
+      "acceptanceDate": "2026-10-17",
+      "asOf": "2026-10-22"
+    },
+    "expected": {
+      "status": "not_yet_due",
+      "termDays": 15,
+      "capped": false,
+      "lastPayableDate": "2026-11-01",
+      "interestStartDate": "2026-11-02",
+      "daysLeft": 10
+    }
+  },
+  {
+    "id": "udyam-after-invoice",
+    "note": "Udyam registration dated after the invoice => may not be covered",
+    "input": {
+      "invoiceDate": "2026-01-01",
+      "udyamDate": "2026-02-01",
+      "agreementDays": null,
+      "amount": 100000,
+      "acceptanceDate": "2026-01-01",
+      "asOf": "2026-06-01"
+    },
+    "expected": {
+      "status": "udyam_after_invoice"
+    }
+  },
+  {
+    "id": "rate-history-not-loaded",
+    "note": "Interest would start before 8 Feb 2023 => rate history not loaded",
+    "input": {
+      "invoiceDate": "2022-11-01",
+      "udyamDate": "2022-01-01",
+      "agreementDays": null,
+      "amount": 100000,
+      "acceptanceDate": "2022-11-01",
+      "asOf": "2026-10-22"
+    },
+    "expected": {
+      "status": "rate_history_not_loaded",
+      "lastPayableDate": "2022-11-16",
+      "interestStartDate": "2022-11-17"
+    }
+  },
+  {
+    "id": "rate-history-boundary-ok",
+    "note": "Interest starts exactly on 2023-02-08 => allowed",
+    "input": {
+      "invoiceDate": "2023-01-23",
+      "udyamDate": "2022-01-01",
+      "agreementDays": null,
+      "amount": 100000,
+      "acceptanceDate": "2023-01-23",
+      "asOf": "2023-02-28"
+    },
+    "expected": {
+      "status": "overdue",
+      "termDays": 15,
+      "capped": false,
+      "lastPayableDate": "2023-02-07",
+      "interestStartDate": "2023-02-08",
+      "daysOverdue": 21,
+      "rows": [
+        {
+          "month": "2023-02",
+          "openingBalance": 100000,
+          "days": 21,
+          "segments": [
+            {
+              "bankRate": 6.75,
+              "section16Rate": 20.25,
+              "days": 21
+            }
+          ],
+          "interest": 1165.07,
+          "closingBalance": 101165.07
+        }
+      ],
+      "totalInterest": 1165.07,
+      "totalDue": 101165.07
+    }
+  }
+]
