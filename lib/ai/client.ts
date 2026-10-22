@@ -8,7 +8,12 @@ const DEFAULT_PRIMARY = "gemini-3.5-flash";
 // Timed live on 22 Oct 2026 with the real sample PDF: flash-lite-latest answered in 6.5 s;
 // 3.7-flash hung past 45 s; 3.6-flash and 3.5-flash-lite had network errors; 3.8-flash and
 // 3.1-flash-lite returned 503. Preview models are flaky, so re-time these before relying on them.
-const DEFAULT_FALLBACKS = ["gemini-flash-lite-latest", "gemini-3.7-flash"];
+// The default primary leads the fallbacks: if GEMINI_MODEL names a model that runs out of quota
+// (seen live: gemini-3-flash-preview, 429 on two keys), the known-good default is tried next.
+// With no override it is the primary already, and the duplicate is dropped.
+// flash-lite goes last: it is the model most often still in quota, and the last model gets the
+// whole remaining time (non-last models get a 20 s leash, which cut flash-lite off mid-draft, 22 Oct 2026).
+const DEFAULT_FALLBACKS = [DEFAULT_PRIMARY, "gemini-3.7-flash", "gemini-flash-lite-latest"];
 
 export const MODEL = process.env.GEMINI_MODEL || DEFAULT_PRIMARY;
 

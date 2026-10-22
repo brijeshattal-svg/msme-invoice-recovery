@@ -15,12 +15,12 @@ afterEach(() => {
 
 describe("getModels", () => {
   it("defaults to gemini-3.5-flash with two fallbacks, primary first", () => {
-    expect(getModels()).toEqual(["gemini-3.5-flash", "gemini-flash-lite-latest", "gemini-3.7-flash"]);
+    expect(getModels()).toEqual(["gemini-3.5-flash", "gemini-3.7-flash", "gemini-flash-lite-latest"]);
   });
 
-  it("GEMINI_MODEL changes the primary and keeps the default fallbacks", () => {
+  it("GEMINI_MODEL changes the primary; the known-good default becomes the first fallback", () => {
     process.env.GEMINI_MODEL = "gemini-9-pro";
-    expect(getModels()).toEqual(["gemini-9-pro", "gemini-flash-lite-latest", "gemini-3.7-flash"]);
+    expect(getModels()).toEqual(["gemini-9-pro", "gemini-3.5-flash", "gemini-3.7-flash", "gemini-flash-lite-latest"]);
   });
 
   it("an empty GEMINI_MODEL line (as in .env.example) falls back to the default", () => {
@@ -37,7 +37,7 @@ describe("getModels", () => {
 
   it("an empty GEMINI_FALLBACK_MODELS line uses the defaults", () => {
     process.env.GEMINI_FALLBACK_MODELS = "";
-    expect(getModels()).toEqual(["gemini-3.5-flash", "gemini-flash-lite-latest", "gemini-3.7-flash"]);
+    expect(getModels()).toEqual(["gemini-3.5-flash", "gemini-3.7-flash", "gemini-flash-lite-latest"]);
   });
 
   it('"none" turns fallbacks off, in any case', () => {
@@ -49,7 +49,7 @@ describe("getModels", () => {
 
   it("drops duplicates, keeping the first position", () => {
     process.env.GEMINI_MODEL = "gemini-3.7-flash";
-    expect(getModels()).toEqual(["gemini-3.7-flash", "gemini-flash-lite-latest"]);
+    expect(getModels()).toEqual(["gemini-3.7-flash", "gemini-3.5-flash", "gemini-flash-lite-latest"]);
     process.env.GEMINI_FALLBACK_MODELS = "x,x,gemini-3.7-flash";
     expect(getModels()).toEqual(["gemini-3.7-flash", "x"]);
   });
