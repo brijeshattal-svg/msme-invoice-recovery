@@ -2,6 +2,7 @@ import type { ConfidenceKey, ExtractedInvoice } from "./ai/schemas";
 import { COPY } from "./copy";
 import { isValidISODate } from "./engine/dates";
 import type { Tone } from "./email/tones";
+import { emptyEligibility, type Eligibility } from "./standing";
 
 export type Step = "upload" | "check" | "standing" | "tone" | "send";
 export const STEPS: { id: Step; label: string }[] = [
@@ -47,6 +48,8 @@ export type State = {
   termsHint: string | null;
   currency: string | null;
   acceptanceEdited: boolean;
+  /** Optional answers to "Does the law apply to you?"; they only add hedged notes. */
+  eligibility: Eligibility;
 };
 
 const emptyForm: FormValues = {
@@ -73,6 +76,7 @@ export const initialState: State = {
   termsHint: null,
   currency: null,
   acceptanceEdited: false,
+  eligibility: emptyEligibility,
 };
 
 export type Action =
@@ -81,6 +85,7 @@ export type Action =
   | { type: "extracted"; data: ExtractedInvoice }
   | { type: "manual" }
   | { type: "edit"; field: FieldKey; value: string | boolean }
+  | { type: "eligibility"; field: keyof Eligibility; value: string }
   | { type: "go"; step: Step }
   | { type: "setTone"; tone: Tone }
   | { type: "draftLoading" }
@@ -142,6 +147,8 @@ export function reducer(s: State, a: Action): State {
       const currency = a.field === "amount" && s.currency !== null && s.currency !== "INR" ? "INR" : s.currency;
       return { ...s, form, flagged, acceptanceEdited, currency };
     }
+    case "eligibility":
+      return { ...s, eligibility: { ...s.eligibility, [a.field]: a.value } as Eligibility };
     case "go":
       return { ...s, step: a.step };
     case "setTone":

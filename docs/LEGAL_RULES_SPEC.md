@@ -114,3 +114,6 @@ Because step 2 rejects any digit that is not an approved string, a hallucinated 
 | O3 | Read the enacted s.37(2)(g) text | Income-tax Act 2025 | you |
 | O4 | Enterprise category (micro/small vs medium/trader) | The scope doc says the app "tells them why" but gives no field for it. Recommended: one extra select in the three-facts block. Skipping it makes that out-of-scope row unreachable | you decide |
 | O5 | Interest on GST-inclusive total is arguable | Keep amount editable; known-limits slide | pitch |
+
+## Updating the RBI rate (after each MPC meeting, next: 2-4 Dec 2026)
+If the Bank Rate changes, add one row `{ from: "<effective date YYYY-MM-DD>", bankRate: <new rate> }` to the end of `RATE_HISTORY` in `lib/engine/config.ts`, add a golden vector that crosses the new date in a separate labelled commit, and run `npm test`. The Standing screen warns users when the last row is more than 75 days old (`RATE_STALE_AFTER_DAYS` in `lib/standing.ts`).

@@ -1,4 +1,5 @@
 import { COPY } from "@/lib/copy";
+import { Help } from "./Help";
 import { STEPS, type Step } from "@/lib/wizard";
 
 /** Glass header: logo, "Step n of 5" and a thin progress hairline. */
@@ -18,6 +19,7 @@ export function Stepper({ current }: { current: Step }) {
         <span className="num ml-auto text-sm text-muted" aria-live="polite">
           {text}
         </span>
+        <Help />
       </div>
       <div
         role="progressbar"

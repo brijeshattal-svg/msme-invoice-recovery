@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { COPY } from "@/lib/copy";
+import { COPY, PROCESS } from "@/lib/copy";
 import type { State } from "@/lib/wizard";
 import { Banner } from "./ui/Banner";
 import { Button } from "./ui/Button";
@@ -90,15 +90,43 @@ export function Upload({ upload, error, onFile, onSample, onManual }: Props) {
             size="sm"
             role="alert"
             action={
-              <Button variant="link" tone="ink" onClick={onManual} className="text-base font-semibold">
-                Enter details manually instead
-              </Button>
+              <div className="flex flex-wrap gap-x-4">
+                <Button variant="link" tone="ink" onClick={() => input.current?.click()} className="text-base font-semibold">
+                  Try another file
+                </Button>
+                <Button variant="link" tone="ink" onClick={onManual} className="text-base font-semibold">
+                  Enter details manually instead
+                </Button>
+              </div>
             }
           >
             <p className="text-base">{error}</p>
           </Banner>
         )}
       </div>
+
+      <section aria-labelledby="process-h" className="flex flex-col gap-4">
+        <h3 id="process-h" className="text-lg font-semibold">{PROCESS.title}</h3>
+        <ol className="grid gap-3 sm:grid-cols-3">
+          {PROCESS.steps.map((s, i) => (
+            <li key={s.title} className="rounded-card bg-surface p-4 shadow-card">
+              <span aria-hidden className="num mb-2 grid h-7 w-7 place-items-center rounded-full bg-brand-50 text-sm font-bold text-brand-800">
+                {i + 1}
+              </span>
+              <span className="block font-semibold">{s.title}</span>
+              <span className="block text-sm text-muted">{s.body}</span>
+            </li>
+          ))}
+        </ol>
+        <div className="rounded-card border-2 border-line p-4">
+          <h4 className="font-semibold">{PROCESS.haveReadyTitle}</h4>
+          <ul className="mt-2 flex list-disc flex-col gap-1 pl-5 text-base">
+            {PROCESS.haveReady.map((h) => (
+              <li key={h}>{h}</li>
+            ))}
+          </ul>
+        </div>
+      </section>
 
       <div className="flex flex-col gap-2">
         <p className="text-sm text-muted">{COPY.privacy}</p>

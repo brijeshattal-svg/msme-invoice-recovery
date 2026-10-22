@@ -12,7 +12,7 @@ import { COPY } from "@/lib/copy";
 import { factsFromForm, getDraft } from "@/lib/email/flow";
 import { compute } from "@/lib/engine";
 import { compressImage, UploadError } from "@/lib/image";
-import { toEngineInput } from "@/lib/standing";
+import { eligibilityNotes, toEngineInput } from "@/lib/standing";
 import { todayIST } from "@/lib/today";
 import { initialState, reducer, sampleExtraction } from "@/lib/wizard";
 
@@ -80,6 +80,8 @@ export default function Home() {
           // asOf = today in India, read when this screen opens (CLAUDE.md rule 5).
           result={compute(toEngineInput(state.form, todayIST()))}
           form={state.form}
+          notes={eligibilityNotes(state.eligibility, state.form)}
+          asOf={todayIST()}
           onBack={() => dispatch({ type: "go", step: "check" })}
           onTone={() => dispatch({ type: "go", step: "tone" })}
           onReset={() => dispatch({ type: "reset" })}

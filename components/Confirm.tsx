@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { COPY } from "@/lib/copy";
+import { COPY, ELIGIBILITY } from "@/lib/copy";
+import { eligibilityNotes } from "@/lib/standing";
 import { todayIST } from "@/lib/today";
 import { validateForm, type Action, type FieldKey, type FormErrors, type State } from "@/lib/wizard";
 import { Banner } from "./ui/Banner";
@@ -17,6 +18,7 @@ export function Confirm({ state, dispatch, onSubmit }: Props) {
   const { form, flagged, termsHint, currency } = state;
 
   useEffect(() => heading.current?.focus(), []);
+  const notes = eligibilityNotes(state.eligibility, form);
 
   const set = (field: FieldKey) => (e: { target: { value: string } }) =>
     dispatch({ type: "edit", field, value: e.target.value });
@@ -105,6 +107,36 @@ export function Confirm({ state, dispatch, onSubmit }: Props) {
         </Field>
       </fieldset>
 
+      <fieldset className="flex flex-col gap-5 rounded-card border-2 border-line p-4">
+        <legend className="px-2 text-lg font-semibold">{ELIGIBILITY.title}</legend>
+        <p className="text-sm text-muted">{ELIGIBILITY.intro}</p>
+        <Choice
+          name="enterprise"
+          question={ELIGIBILITY.enterpriseQ}
+          options={ELIGIBILITY.enterpriseOptions}
+          value={state.eligibility.enterprise}
+          onChange={(v) => dispatch({ type: "eligibility", field: "enterprise", value: v })}
+        />
+        <Choice
+          name="buyerInIndia"
+          question={ELIGIBILITY.buyerQ}
+          options={ELIGIBILITY.buyerOptions}
+          value={state.eligibility.buyerInIndia}
+          onChange={(v) => dispatch({ type: "eligibility", field: "buyerInIndia", value: v })}
+        />
+        <div aria-live="polite">
+          {notes.length > 0 && (
+            <Banner tone="warn" size="sm" role="note" title={ELIGIBILITY.notesTitle}>
+              <ul className="flex list-disc flex-col gap-1 pl-5">
+                {notes.map((n) => (
+                  <li key={n}>{n}</li>
+                ))}
+              </ul>
+            </Banner>
+          )}
+        </div>
+      </fieldset>
+
       <div className="flex flex-col gap-3">
         <Button type="submit" size="lg">
           Check what I may be owed
@@ -115,5 +147,40 @@ export function Confirm({ state, dispatch, onSubmit }: Props) {
       </div>
       <p className="text-sm text-muted">Not legal advice.</p>
     </form>
+  );
+}
+
+/** A labelled row of radio "pills"; one answer, changeable, optional. */
+function Choice({
+  name,
+  question,
+  options,
+  value,
+  onChange,
+}: {
+  name: string;
+  question: string;
+  options: readonly { value: string; label: string }[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const id = `q-${name}`;
+  return (
+    <div className="flex flex-col gap-2" role="radiogroup" aria-labelledby={id}>
+      <p id={id} className="text-base font-semibold">
+        {question}
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {options.map((o) => (
+          <label
+            key={o.value}
+            className="flex min-h-11 cursor-pointer items-center rounded-full border-2 border-control px-4 text-base font-medium has-[:checked]:border-brand-700 has-[:checked]:bg-brand-50 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-brand-600"
+          >
+            <input type="radio" name={name} className="sr-only" checked={value === o.value} onChange={() => onChange(o.value)} />
+            {o.label}
+          </label>
+        ))}
+      </div>
+    </div>
   );
 }

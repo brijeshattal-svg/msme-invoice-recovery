@@ -65,7 +65,7 @@ export const STANDING = {
   howTitle: "How this is worked out",
   how:
     "Interest is charged at three times the RBI Bank Rate in force on each day. It builds up day by day on the amount owed at the start of each calendar month, using a 365-day year, and is added to the amount owed at the end of the month, so the next month's interest is worked out on a slightly larger amount.",
-  ratesLoaded: (date: string) => `RBI rates loaded up to ${date}`,
+  ratesLoaded: (date: string) => `Interest rates checked to ${date}`,
 
   // not yet due
   notYetDueTitle: "Not late yet",
@@ -95,7 +95,7 @@ export const EMAIL = {
   sendTitle: "Send it yourself",
   writing: "Writing your email...",
   checkedChip: "Numbers checked against your calculation",
-  templateChip: "Standard draft (AI was unavailable)",
+  templateChip: "Standard draft (AI was unavailable). Same checked figures; you can send it as is.",
   subjectLabel: "Subject",
   bodyLabel: "Email",
   copy: "Copy email",
@@ -113,4 +113,93 @@ export const EMAIL = {
     `Check these before sending. They are not figures from your calculation: ${tokens}`,
   disclaimer: "Not legal advice. Review before sending. You send this yourself from your own email.",
   notOverdue: "This invoice isn't overdue today, so there is nothing to draft.",
+} as const;
+
+// F1: landing process strip. Plain words; each step says who does what.
+export const PROCESS = {
+  title: "How it works",
+  steps: [
+    { title: "Upload", body: "AI reads your invoice. You check every field." },
+    { title: "See where you stand", body: "Plain code works out the due date and the interest that may be owed." },
+    { title: "Send it yourself", body: "Pick a tone, get a polite draft, send it from your own email." },
+  ],
+  haveReadyTitle: "Have these ready",
+  haveReady: [
+    "The invoice (PDF or photo)",
+    "The date your client accepted the work or goods",
+    "Any written agreement on payment time",
+    "Your Udyam registration date",
+  ],
+} as const;
+
+// F1: optional eligibility questions on the Check screen. Notes are hedged ("may") and never block.
+export const ELIGIBILITY = {
+  title: "Does the law apply to you?",
+  intro: "Optional, but it helps you know how much to rely on the result. You can continue whatever you answer.",
+  enterpriseQ: "Is your business registered on Udyam as a micro or small enterprise?",
+  enterpriseOptions: [
+    { value: "micro_small", label: "Yes, micro or small" },
+    { value: "medium", label: "Medium" },
+    { value: "none", label: "Not registered" },
+    { value: "unsure", label: "Not sure" },
+  ],
+  buyerQ: "Is your client a business or person based in India?",
+  buyerOptions: [
+    { value: "yes", label: "Yes" },
+    { value: "no", label: "No" },
+    { value: "unsure", label: "Not sure" },
+  ],
+  notesTitle: "Worth knowing",
+  notes: {
+    medium:
+      "The MSMED Act's late-payment interest covers micro and small enterprises only, so it may not apply to a medium enterprise.",
+    notRegistered:
+      "The late-payment rules are usually applied to suppliers registered on Udyam. Without registration, they may not apply.",
+    enterpriseUnsure:
+      "Your Udyam certificate shows your category. The late-payment interest covers micro and small enterprises only.",
+    buyerAbroad:
+      "Section 15 is about buyers in India, so the rules may not apply to a client based outside India.",
+    buyerUnsure: "Section 15 is about buyers in India. Check where your client is based before relying on the result.",
+    udyamAfter:
+      "Your Udyam registration date is after the invoice date, so this invoice may not be covered.",
+  },
+} as const;
+
+// F1: rate freshness on the Standing screen.
+export const RATES = {
+  staleTitle: "The RBI rate may have changed since",
+  staleBody: "Check the current Bank Rate before you rely on this.",
+} as const;
+
+// F1: static help, not a chat. Reviewed wording; no legal outcome is promised.
+export const HELP = {
+  open: "How this works",
+  title: "How this works and what it means",
+  close: "Close",
+  items: [
+    {
+      q: "What is the 45-day rule?",
+      a: "Under Section 15 of the MSMED Act, 2006, a buyer should pay a micro or small supplier within 15 days of accepting the work or goods, or within the days agreed in writing, which can't be more than 45.",
+    },
+    {
+      q: "How is the interest worked out?",
+      a: "At three times the RBI Bank Rate in force on each day, from the day after payment was due. It builds up day by day on the amount owed at the start of each month (monthly rests), using a 365-day year.",
+    },
+    {
+      q: "What do you store?",
+      a: "Nothing. There is no database and no login. Everything stays in this browser tab and is gone when you close or refresh it.",
+    },
+    {
+      q: "What is sent to AI?",
+      a: "Your invoice file, so the details can be read, and the details you confirm, so the email can be written. The AI never works out a date or a number; plain code does, and code checks every number in the draft.",
+    },
+    {
+      q: "What will the email say?",
+      a: "It will be polite, give the invoice details, the due date and the interest that may be owed, and ask when you can expect payment. It will not threaten, and it will not mention lawyers, courts or any outside body.",
+    },
+    {
+      q: "Is this legal advice?",
+      a: "No. It is a calculator and a draft. Talk to a professional before any formal step.",
+    },
+  ],
 } as const;

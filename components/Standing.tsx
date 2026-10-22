@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { RATE_HISTORY_START, lastRateChangeDate, type EngineResult, type MonthRow } from "@/lib/engine";
-import { STANDING } from "@/lib/copy";
+import { ELIGIBILITY, RATES, STANDING } from "@/lib/copy";
+import { rateFreshness } from "@/lib/standing";
 import { formatDate, formatINR, formatMonth, formatPercent } from "@/lib/format";
 import type { FormValues } from "@/lib/wizard";
 import { Banner } from "./ui/Banner";
@@ -15,6 +16,10 @@ type Props = {
   onBack: () => void;
   onTone: () => void;
   onReset: () => void;
+  /** Hedged notes from the optional eligibility answers (eligibilityNotes). */
+  notes?: string[];
+  /** Today in India; turns on the stale-rate banner when the rate table is old. */
+  asOf?: string;
 };
 
 // Presentational only: every number shown comes from compute() (CLAUDE.md rule 1).
@@ -86,10 +91,12 @@ function Working({ rows }: { rows: MonthRow[] }) {
   );
 }
 
-export function Standing({ result, form, onBack, onTone, onReset }: Props) {
+export function Standing({ result, form, onBack, onTone, onReset, notes = [], asOf }: Props) {
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => heading.current?.focus(), []);
   const r = STANDING.rows;
+  // The engine already explains a registration after the invoice (udyam_after_invoice), so skip that note here.
+  const shown = notes.filter((n) => n !== ELIGIBILITY.notes.udyamAfter);
 
   let body: ReactNode;
   let actions: ReactNode;
@@ -139,6 +146,12 @@ export function Standing({ result, form, onBack, onTone, onReset }: Props) {
           <p className="text-base leading-7">{STANDING.how}</p>
           <p className="text-sm text-muted">{STANDING.ratesLoaded(formatDate(lastRateChangeDate()))}</p>
         </section>
+
+        {asOf && rateFreshness(asOf).stale && (
+          <Banner tone="warn" size="sm" role="note" title={RATES.staleTitle}>
+            <p>{RATES.staleBody}</p>
+          </Banner>
+        )}
       </>
     );
     actions = (
@@ -177,6 +190,15 @@ export function Standing({ result, form, onBack, onTone, onReset }: Props) {
       <h2 id="standing-h" ref={heading} tabIndex={-1} className="step-title outline-none">
         {STANDING.title}
       </h2>
+      {shown.length > 0 && (
+        <Banner tone="warn" size="sm" role="note" title={ELIGIBILITY.notesTitle}>
+          <ul className="flex list-disc flex-col gap-1 pl-5">
+            {shown.map((n) => (
+              <li key={n}>{n}</li>
+            ))}
+          </ul>
+        </Banner>
+      )}
       {body}
       <div className="flex flex-col gap-3">
         {actions}

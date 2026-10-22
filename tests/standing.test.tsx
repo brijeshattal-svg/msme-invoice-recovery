@@ -67,7 +67,7 @@ describe("Standing screen: figures on screen equal the golden vectors", () => {
       expect(t).toContain(formatINR(m.closingBalance));
     }
     expect(t).toContain("Choose a tone");
-    expect(t).toContain(`RBI rates loaded up to ${formatDate(lastRateChangeDate())}`);
+    expect(t).toContain(`Interest rates checked to ${formatDate(lastRateChangeDate())}`);
   });
 
   it("rate-change-crossing-7-oct-2026 shows both rates with their day counts", () => {
