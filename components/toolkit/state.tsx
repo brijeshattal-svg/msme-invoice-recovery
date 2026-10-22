@@ -1,12 +1,29 @@
 "use client";
 
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
 import { addDays } from "@/lib/engine";
+import type { CashDraft } from "@/lib/forecast/cash";
 import type { ToolkitInvoice } from "@/lib/intel/priority";
 
 // SPRINT_PLAN.md section 1.2: memory only. No localStorage, no server, gone on refresh or in a new tab.
 
+/** One editable cash item; `fromPriorities` rows were brought in from the invoice list. */
+export type CashRow = CashDraft & { fromPriorities?: boolean; sample?: boolean };
+
+/** The Cash page's inputs, kept here so the dashboard can show the forecast too. */
+export type CashState = {
+  start: string;
+  setStart: Dispatch<SetStateAction<string>>;
+  collections: CashRow[];
+  setCollections: Dispatch<SetStateAction<CashRow[]>>;
+  expenses: CashRow[];
+  setExpenses: Dispatch<SetStateAction<CashRow[]>>;
+  late: boolean;
+  setLate: Dispatch<SetStateAction<boolean>>;
+};
+
 type ToolkitState = {
+  cash: CashState;
   invoices: ToolkitInvoice[];
   /** True while the invoice last added from Quick Check is still in the list. */
   fromQuickCheck: boolean;
@@ -60,7 +77,12 @@ export function sampleInvoices(today: string): ToolkitInvoice[] {
 export function ToolkitProvider({ children, initial = [] }: { children: ReactNode; initial?: ToolkitInvoice[] }) {
   const [invoices, setInvoices] = useState<ToolkitInvoice[]>(initial);
   const [fromQuickCheckId, setFromQuickCheckId] = useState<string | null>(null);
+  const [start, setStart] = useState("");
+  const [collections, setCollections] = useState<CashRow[]>([]);
+  const [expenses, setExpenses] = useState<CashRow[]>([]);
+  const [late, setLate] = useState(false);
   const value: ToolkitState = {
+    cash: { start, setStart, collections, setCollections, expenses, setExpenses, late, setLate },
     invoices,
     fromQuickCheck: fromQuickCheckId !== null && invoices.some((i) => i.id === fromQuickCheckId),
     addFromQuickCheck: (inv) => {

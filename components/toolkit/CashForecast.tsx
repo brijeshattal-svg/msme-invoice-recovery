@@ -10,7 +10,6 @@ import {
   validateCashDraft,
   validateStartingCash,
   WINDOW_DAYS,
-  type CashDraft,
   type Forecast,
 } from "@/lib/forecast/cash";
 import { formatDate } from "@/lib/format";
@@ -21,9 +20,7 @@ import { Button } from "../ui/Button";
 import { Disclosure } from "../ui/Disclosure";
 import { CashChart } from "./CashChart";
 import { inrPaise } from "./money";
-import { newId, useToolkit } from "./state";
-
-type Row = CashDraft & { fromPriorities?: boolean; sample?: boolean };
+import { newId, useToolkit, type CashRow as Row } from "./state";
 
 const inputCls = "min-h-12 w-full rounded-input border-2 border-control bg-surface px-3 text-base text-ink";
 
@@ -120,12 +117,10 @@ function Summary({ f, title, tone }: { f: Forecast; title: string; tone: "expect
 
 /** Cash tab: manual inputs -> pure, tested forecast (lib/forecast/cash.ts). Memory only. */
 export function CashForecast() {
-  const { invoices } = useToolkit();
+  // Inputs live in the shared in-memory provider so the dashboard can show the same forecast.
+  const { invoices, cash } = useToolkit();
+  const { start, setStart, collections, setCollections, expenses, setExpenses, late, setLate } = cash;
   const [today] = useState(() => todayIST());
-  const [start, setStart] = useState("");
-  const [collections, setCollections] = useState<Row[]>([]);
-  const [expenses, setExpenses] = useState<Row[]>([]);
-  const [late, setLate] = useState(false);
 
   const unpaid = invoices.filter((i) => !i.paid);
   const blank = (): Row => ({ id: newId(), label: "", amount: "", date: addDays(today, 7), mayBeLate: true });
