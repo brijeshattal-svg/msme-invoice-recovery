@@ -21,7 +21,7 @@ export function Stepper({ current }: { current: Step }) {
           {text}
         </span>
         <Link href="/toolkit" className="min-h-11 content-center whitespace-nowrap rounded-full px-2 text-sm font-semibold text-link hover:bg-brand-50">
-          {TOOLKIT.title}
+          {TOOLKIT.link}
         </Link>
         <Help />
       </div>

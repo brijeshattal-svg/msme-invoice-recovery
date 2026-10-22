@@ -12,15 +12,20 @@ import { Disclosure } from "../ui/Disclosure";
 import { InvoiceListEditor } from "./InvoiceListEditor";
 import { useToolkit } from "./state";
 
-/** Priorities tab: ranked clients (pure, tested logic in lib/intel/priority.ts) plus the editable list. */
+/** Priorities page: ranked clients (pure, tested logic in lib/intel/priority.ts) plus the editable list. */
 export function PriorityList() {
-  const { invoices, loadSample, clear } = useToolkit();
+  const { invoices, loadSample, clear, fromQuickCheck } = useToolkit();
   const [today] = useState(() => todayIST());
   const { ranked, clear: clearClients } = rankClients(invoices, today);
   const hasSample = invoices.some((i) => i.sample);
 
   return (
     <section aria-labelledby="pr-h" className="flex flex-col gap-5">
+      {fromQuickCheck && (
+        <Banner tone="info" size="sm" role="status">
+          <p>{C.added}</p>
+        </Banner>
+      )}
       <div className="rounded-hero bg-surface p-6 shadow-raised">
         <h2 id="pr-h" className="text-xl font-bold tracking-tight">
           {C.heading}

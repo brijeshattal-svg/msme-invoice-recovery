@@ -8,7 +8,7 @@ import { Standing } from "@/components/Standing";
 import { Stepper } from "@/components/Stepper";
 import { ToneScreen } from "@/components/Tone";
 import { Upload } from "@/components/Upload";
-import { handOffInvoice, newId } from "@/components/toolkit/state";
+import { newId, useToolkit } from "@/components/toolkit/state";
 import { extractInvoice, ExtractFailure, requestDraft } from "@/lib/api";
 import { COPY } from "@/lib/copy";
 import { factsFromForm, getDraft } from "@/lib/email/flow";
@@ -22,11 +22,12 @@ export default function Home() {
   // The whole journey lives in memory only: no localStorage, no cookies (CLAUDE.md rule 3).
   const [state, dispatch] = useReducer(reducer, initialState);
   const router = useRouter();
+  const { addFromQuickCheck } = useToolkit();
 
-  // Only on the founder's click: pass this invoice (in memory) to the toolkit's Priorities tab.
+  // Only on the founder's click: add this invoice to the shared in-memory list and open Priorities.
   function addToPriorities() {
     const f = state.form;
-    handOffInvoice({
+    addFromQuickCheck({
       id: newId(),
       client: f.clientName.trim(),
       number: f.invoiceNumber.trim(),
@@ -37,7 +38,7 @@ export default function Home() {
       promisedDate: null,
       paid: false,
     });
-    router.push("/toolkit");
+    router.push("/priorities");
   }
 
   async function handleFile(file: File) {

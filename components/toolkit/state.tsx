@@ -4,10 +4,14 @@ import { createContext, useContext, useState, type ReactNode } from "react";
 import { addDays } from "@/lib/engine";
 import type { ToolkitInvoice } from "@/lib/intel/priority";
 
-// SPRINT_PLAN.md section 1.2: memory only. No localStorage, no server, gone on refresh.
+// SPRINT_PLAN.md section 1.2: memory only. No localStorage, no server, gone on refresh or in a new tab.
 
 type ToolkitState = {
   invoices: ToolkitInvoice[];
+  /** True while the invoice last added from Quick Check is still in the list. */
+  fromQuickCheck: boolean;
+  /** Only on the founder's click on the Quick Check result screen. */
+  addFromQuickCheck: (inv: ToolkitInvoice) => void;
   add: (inv: ToolkitInvoice) => void;
   update: (id: string, patch: Partial<ToolkitInvoice>) => void;
   remove: (id: string) => void;
@@ -16,20 +20,6 @@ type ToolkitState = {
 };
 
 const Ctx = createContext<ToolkitState | null>(null);
-
-// Hand-off from Quick Check: set just before a client-side navigation to /toolkit (the JS module
-// stays loaded, so this is still memory only), read when the toolkit mounts, then cleared.
-let pending: ToolkitInvoice | null = null;
-export function handOffInvoice(inv: ToolkitInvoice) {
-  pending = inv;
-}
-/** Read without clearing (React may run state initialisers twice in development). */
-export function peekHandOff(): ToolkitInvoice | null {
-  return pending;
-}
-export function clearHandOff() {
-  pending = null;
-}
 
 let seq = 0;
 export const newId = () => `inv-${Date.now().toString(36)}-${++seq}`;
@@ -63,10 +53,20 @@ export function sampleInvoices(today: string): ToolkitInvoice[] {
   ];
 }
 
+/**
+ * Lives in the root layout, so the list survives client-side navigation between Quick Check and the
+ * tool pages. Still memory only: a refresh or a new tab starts empty.
+ */
 export function ToolkitProvider({ children, initial = [] }: { children: ReactNode; initial?: ToolkitInvoice[] }) {
   const [invoices, setInvoices] = useState<ToolkitInvoice[]>(initial);
+  const [fromQuickCheckId, setFromQuickCheckId] = useState<string | null>(null);
   const value: ToolkitState = {
     invoices,
+    fromQuickCheck: fromQuickCheckId !== null && invoices.some((i) => i.id === fromQuickCheckId),
+    addFromQuickCheck: (inv) => {
+      setInvoices((xs) => [...xs, inv]);
+      setFromQuickCheckId(inv.id);
+    },
     add: (inv) => setInvoices((xs) => [...xs, inv]),
     update: (id, patch) => setInvoices((xs) => xs.map((x) => (x.id === id ? { ...x, ...patch } : x))),
     remove: (id) => setInvoices((xs) => xs.filter((x) => x.id !== id)),

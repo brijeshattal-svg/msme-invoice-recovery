@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { PriorityList } from "@/components/toolkit/PriorityList";
-import { clearHandOff, handOffInvoice, peekHandOff, sampleInvoices, ToolkitProvider } from "@/components/toolkit/state";
+import { sampleInvoices, ToolkitProvider } from "@/components/toolkit/state";
 import { PRIORITIES_COPY as C } from "@/lib/copy";
 import { rankClients } from "@/lib/intel/priority";
 import { todayIST } from "@/lib/today";
@@ -51,15 +51,8 @@ describe("Priorities tab", () => {
   });
 });
 
-describe("Quick Check hand-off", () => {
-  it("is held in memory until cleared, and reading does not clear it", () => {
-    clearHandOff();
-    expect(peekHandOff()).toBeNull();
-    const inv = sampleInvoices("2026-10-22")[0];
-    handOffInvoice(inv);
-    expect(peekHandOff()).toBe(inv);
-    expect(peekHandOff()).toBe(inv);
-    clearHandOff();
-    expect(peekHandOff()).toBeNull();
+describe("added from Quick Check", () => {
+  it("the banner never shows unprompted: only after the founder clicks Add on the Quick Check result", () => {
+    expect(render(sampleInvoices("2026-10-22"))).not.toContain(C.added);
   });
 });

@@ -237,15 +237,39 @@ export const HELP = {
   ],
 } as const;
 
-// Overnight sprint (SPRINT_PLAN.md): the /toolkit page. Hedged; never "will pay", never legal claims.
+// Overnight sprint (SPRINT_PLAN.md): side tools next to the main Quick Check, each on its own page
+// (/blockers, /priorities, /cash) with /toolkit as the "More tools" hub. Hedged; never "will pay".
 export const TOOLKIT = {
-  title: "Toolkit",
-  intro: "Work out what's blocking a payment, who to chase first, and how late payments affect your cash.",
+  link: "More tools",
+  title: "More tools",
+  intro: "Side tools for chasing payments. Quick Check stays the place to check one overdue invoice.",
   memoryNote: "Nothing here is saved. Refreshing the page clears it.",
-  tabs: { blockers: "Blockers", priorities: "Priorities", cash: "Cash" },
   backToCheck: "Quick Check",
+  navLabel: "Tools",
+  open: "Open",
   notAdvice: "Not legal or financial advice. You decide what to send.",
+  tools: {
+    blockers: {
+      href: "/blockers",
+      nav: "Blockers",
+      title: "Payment Blocker Assistant",
+      intro: "Find out what may be stopping a client from paying, and what to say next.",
+    },
+    priorities: {
+      href: "/priorities",
+      nav: "Priorities",
+      title: "Client Payment Priorities",
+      intro: "See which client needs your attention first, and why.",
+    },
+    cash: {
+      href: "/cash",
+      nav: "Cash",
+      title: "Cash-flow Forecast",
+      intro: "See how late payments could affect your cash over the next 30 days.",
+    },
+  },
 } as const;
+export type ToolId = keyof typeof TOOLKIT.tools;
 
 export const BLOCKERS_COPY = {
   heading: "What did the client say?",
