@@ -94,9 +94,16 @@ describe("validateForm", () => {
 });
 
 describe("sampleExtraction", () => {
-  it("is a complete, fictional, valid-looking invoice dated 75 days back", () => {
-    const s = sampleExtraction(TODAY);
-    expect(s.invoiceDate).toBe("2026-08-08");
+  it("is a complete, fictional invoice matching the sample PDF (fixed date, INR 2,36,000, Net 30)", () => {
+    const s = sampleExtraction();
+    expect(s).toMatchObject({
+      clientName: "Northwind Test Industries Pvt Ltd",
+      invoiceNumber: "BDS/2026/0142",
+      invoiceDate: "2026-08-08", // 75 days before 22 Oct 2026, when the PDF was generated
+      amountTotal: 236000,
+      currency: "INR",
+      paymentTermsDays: 30,
+    });
     expect(validateForm({ ...validForm, ...fromExtraction(s).form, udyamDate: "2024-06-01" }, TODAY)).toEqual({});
   });
 });

@@ -14,5 +14,11 @@ export function formatDate(iso: string): string {
   return `${d} ${MONTHS[m - 1]} ${y}`;
 }
 
+/** "2026-08" -> "Aug 2026". */
+export function formatMonth(ym: string): string {
+  const [y, m] = ym.split("-").map(Number);
+  return `${MONTHS[m - 1]} ${y}`;
+}
+
 /** 16.5 -> "16.50%". */
 export const formatPercent = (n: number): string => `${n.toFixed(2)}%`;

@@ -155,6 +155,7 @@ Each phase ends with a **gate** that must pass before moving on. Times follow yo
 
 | Risk | Mitigation |
 |---|---|
+| **Free-tier Gemini quota is 20 requests/day per model** (hit live on 22 Oct 2026); at 2 requests per journey that is about 10 journeys a day | Enable billing on the Google project for the demo and the founder behaviour test; keep `GEMINI_MODEL` on a model with quota (`gemini-3.5-flash` worked). The app degrades to the standard draft on 429, but invoice reading has no fallback except manual entry |
 | Public endpoint with your API key can be abused | Size/type limits, best-effort per-IP limiter (`lib/ratelimit.ts`; in-memory so only best-effort on serverless), a **spend cap / quota on the Gemini API key in Google AI Studio or Cloud console** (verify what your account offers), and a Vercel Firewall rate-limit rule if your plan offers one (check) |
 | Phone photos exceed Vercel's 4.5 MB body limit | Client-side resize to <=2000 px JPEG q~0.85; PDFs capped at 4 MB with a clear message |
 | Slow extraction hurts the 3-minute target | Measure in P2; drop to Sonnet via env var; show progress copy |

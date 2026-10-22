@@ -1,7 +1,23 @@
 import { COPY } from "./copy";
 import type { ExtractedInvoice } from "./ai/schemas";
+import type { DraftPayload, ServerDraft } from "./email/flow";
 
 export class ExtractFailure extends Error {}
+
+/** Browser -> POST /api/draft. Throws on any problem; the caller falls back to the template. */
+export async function requestDraft(payload: DraftPayload): Promise<ServerDraft> {
+  const res = await fetch("/api/draft", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`draft failed: ${res.status}`);
+  const j = (await res.json()) as Partial<ServerDraft>;
+  if (typeof j.subject !== "string" || typeof j.body !== "string" || (j.source !== "ai" && j.source !== "template")) {
+    throw new Error("draft malformed");
+  }
+  return { subject: j.subject, body: j.body, source: j.source };
+}
 
 /** Browser -> POST /api/extract. Throws ExtractFailure with user-facing copy. */
 export async function extractInvoice(file: File): Promise<ExtractedInvoice> {

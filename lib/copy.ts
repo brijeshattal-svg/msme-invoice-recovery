@@ -17,4 +17,86 @@ export const COPY = {
   acceptanceHelp: "If they didn't object in writing within 15 days of delivery, use the delivery date.",
   unreadable: "We couldn't read this",
   pleaseCheck: "Please check",
+  notRupees: "This invoice isn't in rupees. Enter the amount in INR to continue.",
+} as const;
+
+// Phase 3 "Where you stand" screen. Meanings follow docs/LEGAL_RULES_SPEC.md section 6.
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+export const STANDING = {
+  title: "Where you stand",
+  figuresNote: "Figures are based on the details you entered. We have not verified them.",
+  notAdvice: "Not legal advice.",
+  back: "Back",
+  chooseTone: "Choose a tone",
+  checkAnother: "Check another invoice",
+
+  // overdue
+  interestSuffix: "interest owed so far", // follows the big interest amount
+  totalNowDueLine: (total: string) => `Total now due ${total}`,
+  legalLine:
+    "Under Section 16 of the MSMED Act, 2006, interest may be owed on a payment that is late beyond its due date.",
+  rows: {
+    dueBy: "Payment was due by",
+    interestFrom: "Interest runs from",
+    daysOverdue: "Days overdue",
+    amount: "Amount you confirmed",
+    interest: "Interest to today",
+    total: "Total now due",
+  },
+  capped: (agreedDays: string) =>
+    `Your agreement says ${agreedDays} days. The law caps this at 45, so we used 45.`,
+  workingTitle: "Show the working, month by month",
+  columns: { month: "Month", days: "Days", opening: "Opening balance", rate: "Rate used", interest: "Interest", closing: "Closing balance" },
+  daysCount: (n: number) => plural(n, "day", "days"),
+  howTitle: "How this is worked out",
+  how:
+    "Interest is charged at three times the RBI Bank Rate in force on each day. It builds up day by day on the amount owed at the start of each calendar month, using a 365-day year, and is added to the amount owed at the end of the month, so the next month's interest is worked out on a slightly larger amount.",
+  ratesLoaded: (date: string) => `RBI rates loaded up to ${date}`,
+
+  // not yet due
+  notYetDueTitle: "Not late yet",
+  lastDayToPay: (date: string) => `The last day to pay is ${date}.`,
+  daysLeft: (n: number) => (n === 0 ? "Today is the last day to pay." : `${plural(n, "day", "days")} left.`),
+
+  // udyam registration after the invoice
+  notCoveredTitle: "This invoice may not be covered",
+  notCoveredBody:
+    "Your Udyam registration date is after the invoice date, so the MSMED Act's payment rules may not cover this invoice.",
+  notCoveredCaveat:
+    "The Supreme Court has held that registration must come before the contract, which is a stricter test than the one used here. It has since referred the question to a larger bench.",
+  notCoveredLawyer: "Please check with a lawyer before relying on this invoice for interest.",
+
+  // interest would start before the loaded rate history
+  historyTitle: "We can't calculate interest this far back yet",
+  historyBody: (date: string) =>
+    `This version only has RBI rates from ${date}. Interest on this invoice would start earlier, so we can't calculate it yet.`,
+
+} as const;
+
+// Phase 4: tone and send screens.
+export const EMAIL = {
+  toneTitle: "Pick a tone",
+  toneHelp: "You can change it and redraft any time.",
+  draftButton: "Draft my email",
+  sendTitle: "Send it yourself",
+  writing: "Writing your email...",
+  checkedChip: "Numbers checked against your calculation",
+  templateChip: "Standard draft (AI was unavailable)",
+  subjectLabel: "Subject",
+  bodyLabel: "Email",
+  copy: "Copy email",
+  open: "Open in my email app",
+  changeTone: "Change tone",
+  back: "Back",
+  copied: "Copied. Paste it into your email.",
+  copiedWithPlaceholders: "Copied. Remember to replace the highlighted parts first.",
+  copyFailed: "Couldn't copy automatically. Select the text and copy it yourself.",
+  draftLong: "Draft is long. We copied it, paste it into your email.",
+  placeholderWarning: "Replace the highlighted parts, like [Your name], before you send.",
+  edited: "You edited the draft. Numbers are no longer auto-checked.",
+  strayWarning: (tokens: string) =>
+    `Check these before sending. They are not figures from your calculation: ${tokens}`,
+  disclaimer: "Not legal advice. Review before sending. You send this yourself from your own email.",
+  notOverdue: "This invoice isn't overdue today, so there is nothing to draft.",
 } as const;

@@ -66,7 +66,7 @@ export function Confirm({ state, dispatch, onSubmit }: Props) {
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    const found = validateForm(form, today);
+    const found = validateForm(form, today, currency);
     setErrors(found);
     if (Object.keys(found).length === 0) onSubmit();
     else document.getElementById(`f-${Object.keys(found)[0]}`)?.focus();

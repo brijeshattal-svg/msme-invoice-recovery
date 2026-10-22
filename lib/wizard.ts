@@ -1,5 +1,7 @@
 import type { ConfidenceKey, ExtractedInvoice } from "./ai/schemas";
-import { addDays, isValidISODate } from "./engine/dates";
+import { COPY } from "./copy";
+import { isValidISODate } from "./engine/dates";
+import type { Tone } from "./email/tones";
 
 export type Step = "upload" | "check" | "standing" | "tone" | "send";
 export const STEPS: { id: Step; label: string }[] = [
@@ -22,8 +24,20 @@ export type FormValues = {
 };
 export type FieldKey = keyof FormValues;
 
+export type DraftState = {
+  status: "idle" | "loading" | "ready";
+  subject: string;
+  body: string;
+  /** "ai" = passed the number check; "template" = standard draft. */
+  source: "ai" | "template" | null;
+  /** True once the founder edits the text (the automatic check no longer covers it). */
+  edited: boolean;
+};
+
 export type State = {
   step: Step;
+  tone: Tone;
+  draft: DraftState;
   upload: "idle" | "reading" | "error";
   error: string | null;
   form: FormValues;
@@ -46,8 +60,12 @@ const emptyForm: FormValues = {
   acceptanceDate: "",
 };
 
+const emptyDraft: DraftState = { status: "idle", subject: "", body: "", source: null, edited: false };
+
 export const initialState: State = {
   step: "upload",
+  tone: "friendly",
+  draft: emptyDraft,
   upload: "idle",
   error: null,
   form: emptyForm,
@@ -64,6 +82,10 @@ export type Action =
   | { type: "manual" }
   | { type: "edit"; field: FieldKey; value: string | boolean }
   | { type: "go"; step: Step }
+  | { type: "setTone"; tone: Tone }
+  | { type: "draftLoading" }
+  | { type: "drafted"; subject: string; body: string; source: "ai" | "template" }
+  | { type: "editDraft"; field: "subject" | "body"; value: string }
   | { type: "reset" };
 
 const MAP: [ConfidenceKey, FieldKey][] = [
@@ -116,10 +138,20 @@ export function reducer(s: State, a: Action): State {
       if (a.field === "invoiceDate" && !acceptanceEdited) form.acceptanceDate = String(a.value);
       const flagged = { ...s.flagged };
       delete flagged[a.field];
-      return { ...s, form, flagged, acceptanceEdited };
+      // Re-entering the amount is the founder confirming it is in rupees (see validateForm).
+      const currency = a.field === "amount" && s.currency !== null && s.currency !== "INR" ? "INR" : s.currency;
+      return { ...s, form, flagged, acceptanceEdited, currency };
     }
     case "go":
       return { ...s, step: a.step };
+    case "setTone":
+      return { ...s, tone: a.tone };
+    case "draftLoading":
+      return { ...s, step: "send", draft: { ...emptyDraft, status: "loading" } };
+    case "drafted":
+      return { ...s, draft: { status: "ready", subject: a.subject, body: a.body, source: a.source, edited: false } };
+    case "editDraft":
+      return { ...s, draft: { ...s.draft, [a.field]: a.value, edited: true } };
     case "reset":
       return initialState;
   }
@@ -127,8 +159,11 @@ export function reducer(s: State, a: Action): State {
 
 export type FormErrors = Partial<Record<FieldKey, string>>;
 
-/** Pure validation; `today` is todayIST(). Phase 3 feeds the validated values to the engine. */
-export function validateForm(f: FormValues, today: string): FormErrors {
+/**
+ * Pure validation; `today` is todayIST(). `currency` is what the invoice was read as: anything
+ * other than INR blocks until the founder re-enters the amount (editing it sets currency to INR).
+ */
+export function validateForm(f: FormValues, today: string, currency: string | null = null): FormErrors {
   const e: FormErrors = {};
   if (!f.clientName.trim()) e.clientName = "Enter the client's name.";
   if (!f.invoiceNumber.trim()) e.invoiceNumber = "Enter the invoice number.";
@@ -136,6 +171,7 @@ export function validateForm(f: FormValues, today: string): FormErrors {
   else if (f.invoiceDate > today) e.invoiceDate = "The invoice date can't be in the future.";
   const amount = Number(f.amount);
   if (f.amount.trim() === "" || !Number.isFinite(amount) || amount <= 0) e.amount = "Enter the invoice amount in rupees.";
+  else if (currency !== null && currency !== "INR") e.amount = COPY.notRupees;
   if (!isValidISODate(f.udyamDate)) e.udyamDate = "Enter your Udyam registration date.";
   else if (f.udyamDate > today) e.udyamDate = "The registration date can't be in the future.";
   if (f.hasAgreement) {
@@ -148,13 +184,17 @@ export function validateForm(f: FormValues, today: string): FormErrors {
   return e;
 }
 
-/** Hard-coded stand-in for the sample invoice if the real file or the AI call is unavailable. */
-export function sampleExtraction(today: string): ExtractedInvoice {
+/**
+ * Hard-coded stand-in for public/sample/sample-invoice.pdf, used if the file or the AI call is
+ * unavailable. Must match the PDF (scripts/make-sample-invoice.mjs); the date is fixed, not
+ * relative to today, so both always agree. Fictional parties only.
+ */
+export function sampleExtraction(): ExtractedInvoice {
   return {
     isInvoice: true,
     clientName: "Northwind Test Industries Pvt Ltd",
     invoiceNumber: "BDS/2026/0142",
-    invoiceDate: addDays(today, -75),
+    invoiceDate: "2026-08-08",
     amountTotal: 236000,
     currency: "INR",
     paymentTermsDays: 30,

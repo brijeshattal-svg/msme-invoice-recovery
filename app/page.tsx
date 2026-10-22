@@ -2,11 +2,17 @@
 
 import { useReducer } from "react";
 import { Confirm } from "@/components/Confirm";
+import { SendScreen } from "@/components/Send";
+import { Standing } from "@/components/Standing";
 import { Stepper } from "@/components/Stepper";
+import { ToneScreen } from "@/components/Tone";
 import { Upload } from "@/components/Upload";
-import { extractInvoice, ExtractFailure } from "@/lib/api";
+import { extractInvoice, ExtractFailure, requestDraft } from "@/lib/api";
 import { COPY } from "@/lib/copy";
+import { factsFromForm, getDraft } from "@/lib/email/flow";
+import { compute } from "@/lib/engine";
 import { compressImage, UploadError } from "@/lib/image";
+import { toEngineInput } from "@/lib/standing";
 import { todayIST } from "@/lib/today";
 import { initialState, reducer, sampleExtraction } from "@/lib/wizard";
 
@@ -36,8 +42,16 @@ export default function Home() {
       const data = await extractInvoice(new File([blob], "sample-invoice.pdf", { type: "application/pdf" }));
       dispatch({ type: "extracted", data });
     } catch {
-      dispatch({ type: "extracted", data: sampleExtraction(todayIST()) });
+      dispatch({ type: "extracted", data: sampleExtraction() });
     }
+  }
+
+  // Server draft -> re-checked in the browser -> template on any failure (never dead-ends).
+  async function handleDraft() {
+    dispatch({ type: "draftLoading" });
+    const drafted = await getDraft(state.form, state.tone, todayIST(), requestDraft);
+    if (drafted) dispatch({ type: "drafted", subject: drafted.subject, body: drafted.body, source: drafted.source });
+    else dispatch({ type: "go", step: "standing" }); // not overdue today: back to the standing screen
   }
 
   return (
@@ -59,14 +73,33 @@ export default function Home() {
       )}
 
       {state.step === "standing" && (
-        // Placeholder until Phase 3 wires the engine into this screen.
-        <section className="flex flex-col gap-4">
-          <h2 className="text-2xl font-semibold">Details confirmed</h2>
-          <p className="text-base">The &quot;where you stand&quot; screen is built in the next phase. Your details are kept while you go back.</p>
-          <button type="button" onClick={() => dispatch({ type: "go", step: "check" })} className="min-h-11 self-start text-base underline underline-offset-4">
-            Back
-          </button>
-        </section>
+        <Standing
+          // asOf = today in India, read when this screen opens (CLAUDE.md rule 5).
+          result={compute(toEngineInput(state.form, todayIST()))}
+          form={state.form}
+          onBack={() => dispatch({ type: "go", step: "check" })}
+          onTone={() => dispatch({ type: "go", step: "tone" })}
+          onReset={() => dispatch({ type: "reset" })}
+        />
+      )}
+
+      {state.step === "tone" && (
+        <ToneScreen
+          tone={state.tone}
+          onSelect={(tone) => dispatch({ type: "setTone", tone })}
+          onDraft={handleDraft}
+          onBack={() => dispatch({ type: "go", step: "standing" })}
+        />
+      )}
+
+      {state.step === "send" && (
+        <SendScreen
+          draft={state.draft}
+          facts={factsFromForm(state.form, todayIST())}
+          onEdit={(field, value) => dispatch({ type: "editDraft", field, value })}
+          onChangeTone={() => dispatch({ type: "go", step: "tone" })}
+          onBack={() => dispatch({ type: "go", step: "standing" })}
+        />
       )}
 
       <footer className="mt-auto text-sm text-zinc-700 dark:text-zinc-300">{COPY.disclaimer}</footer>
