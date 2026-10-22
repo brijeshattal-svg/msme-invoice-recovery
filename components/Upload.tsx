@@ -2,7 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { COPY, PROCESS } from "@/lib/copy";
-import type { State } from "@/lib/wizard";
+import { compute, lastRateChangeDate } from "@/lib/engine";
+import { formatDate } from "@/lib/format";
+import { SAMPLE_PREVIEW_AS_OF, samplePreviewInput, type State } from "@/lib/wizard";
+import { Badge } from "./ui/Badge";
+import { CountUp } from "./ui/CountUp";
 import { Banner } from "./ui/Banner";
 import { Button } from "./ui/Button";
 import { cx } from "./ui/cx";
@@ -41,7 +45,8 @@ export function Upload({ upload, error, onFile, onSample, onManual }: Props) {
       </h2>
       <p className="mx-auto mt-5 max-w-[30em] text-lg leading-snug text-muted sm:text-xl">{COPY.heroSub}</p>
 
-      <div className="mt-11 w-full rounded-hero bg-surface p-3.5 shadow-raised">
+      <div className="mt-11 grid w-full gap-4 text-left sm:grid-cols-[1.25fr_1fr]">
+      <div className="rounded-hero bg-surface p-3.5 text-center shadow-raised">
         <div
           onDragOver={(e) => {
             e.preventDefault();
@@ -90,10 +95,10 @@ export function Upload({ upload, error, onFile, onSample, onManual }: Props) {
         </div>
       </div>
 
+      <SampleCard busy={busy} onSample={onSample} />
+      </div>
+
       <div className="mt-3.5 flex flex-wrap justify-center gap-x-2">
-        <Button variant="link" disabled={busy} onClick={onSample} className="px-2.5 text-base font-semibold no-underline hover:underline">
-          Try a sample invoice
-        </Button>
         <Button variant="link" tone="muted" disabled={busy} onClick={onManual} className="px-2.5 text-[15px] no-underline hover:underline">
           Enter details manually
         </Button>
@@ -149,7 +154,7 @@ export function Upload({ upload, error, onFile, onSample, onManual }: Props) {
       </div>
 
       <ul className="mt-12 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-muted">
-        {COPY.trust.map((t) => (
+        {COPY.trust(formatDate(lastRateChangeDate())).map((t) => (
           <li key={t}>{t}</li>
         ))}
       </ul>
@@ -162,5 +167,30 @@ export function Upload({ upload, error, onFile, onSample, onManual }: Props) {
         </ul>
       </Disclosure>
     </section>
+  );
+}
+
+/**
+ * Live example above the fold: the engine's real result for the fictional sample invoice, worked out
+ * to a fixed date. Labelled "Sample" so it is never mistaken for the founder's own figures.
+ */
+function SampleCard({ busy, onSample }: { busy: boolean; onSample: () => void }) {
+  const r = compute(samplePreviewInput());
+  if (r.status !== "overdue") return null;
+  return (
+    <div className="flex flex-col justify-center rounded-hero bg-brand-50 p-6 text-ink">
+      <Badge tone="neutral" className="self-start bg-surface">
+        {COPY.sampleTag}
+      </Badge>
+      <p className="num mt-4 text-[15px] text-muted">
+        {COPY.sampleDue(formatDate(r.lastPayableDate))} · <span className="font-semibold text-warn-ink">{COPY.sampleLate(r.daysOverdue)}</span>
+      </p>
+      <CountUp value={r.totalInterest} durationMs={1100} className="num mt-1 block text-4xl font-bold tracking-tight text-brand-800" />
+      <p className="font-semibold">{COPY.sampleOwed}</p>
+      <p className="num mt-3 text-sm text-muted">{COPY.sampleNote(formatDate(SAMPLE_PREVIEW_AS_OF))}</p>
+      <Button variant="link" disabled={busy} onClick={onSample} className="mt-2 self-start px-0 text-base font-semibold no-underline hover:underline">
+        {COPY.trySample} →
+      </Button>
+    </div>
   );
 }

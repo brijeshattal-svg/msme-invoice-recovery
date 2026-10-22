@@ -24,6 +24,7 @@ export function Field({
   id,
   label,
   flag,
+  read = false,
   error,
   help,
   children,
@@ -31,6 +32,8 @@ export function Field({
   id: string;
   label: string;
   flag?: FieldFlag;
+  /** Filled from the invoice with high confidence. */
+  read?: boolean;
   error?: string;
   help?: string;
   children: (cls: string, describedBy: string | undefined) => ReactNode;
@@ -47,7 +50,11 @@ export function Field({
         <label htmlFor={id} className="text-base font-semibold">
           {label}
         </label>
-        {flag && <Badge tone="warn">{flag === "missing" ? COPY.unreadable : COPY.pleaseCheck}</Badge>}
+        {flag ? (
+          <Badge tone="warn">{flag === "missing" ? COPY.unreadable : COPY.pleaseCheck}</Badge>
+        ) : (
+          read && <Badge tone="success">{COPY.readFromInvoice}</Badge>
+        )}
       </div>
       {children(cx(rowInputClass, error ? "ring-2 ring-danger" : flag && "bg-warn-bg sm:bg-warn-bg"), describedBy)}
       {help && (

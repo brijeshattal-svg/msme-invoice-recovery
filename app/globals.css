@@ -129,8 +129,8 @@ main section[aria-labelledby] {
   * { transition: none !important; }
 }
 
-/* Glass header. */
-.glass {
+/* Glass header and sticky bars. A utility, so variants like max-sm:glass work. */
+@utility glass {
   background: color-mix(in srgb, var(--canvas) 90%, transparent);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);

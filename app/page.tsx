@@ -57,7 +57,7 @@ export default function Home() {
   return (
     <>
       <Stepper current={state.step} />
-      <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-8 px-5 py-10 sm:py-16">
+      <main className={`mx-auto flex w-full ${state.step === "upload" ? "max-w-3xl" : "max-w-xl"} flex-1 flex-col gap-8 px-5 py-10 sm:py-16`}>
       {/* One page-level heading for assistive tech; each step's visible heading is an h2. */}
       <h1 className="sr-only">Overdue invoice check for service businesses</h1>
 
@@ -101,6 +101,9 @@ export default function Home() {
         <SendScreen
           draft={state.draft}
           facts={factsFromForm(state.form, todayIST())}
+          tone={state.tone}
+          today={todayIST()}
+          factsOn={(date) => factsFromForm(state.form, date)}
           onEdit={(field, value) => dispatch({ type: "editDraft", field, value })}
           onChangeTone={() => dispatch({ type: "go", step: "tone" })}
           onBack={() => dispatch({ type: "go", step: "standing" })}

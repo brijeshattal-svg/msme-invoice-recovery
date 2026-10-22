@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { RATE_HISTORY_START, daysBetween, lastRateChangeDate, type EngineResult, type MonthRow } from "@/lib/engine";
 import { ELIGIBILITY, RATES, STANDING } from "@/lib/copy";
 import { rateFreshness } from "@/lib/standing";
 import { formatDate, formatINR, formatMonth, formatPercent } from "@/lib/format";
 import type { FormValues } from "@/lib/wizard";
 import { Banner } from "./ui/Banner";
+import { CountUp } from "./ui/CountUp";
 import { Button } from "./ui/Button";
 import { Disclosure } from "./ui/Disclosure";
 
@@ -109,6 +110,7 @@ export function Standing({ result, form, onBack, onTone, onReset, notes = [], as
   if (result.status === "overdue") {
     body = (
       <>
+        <p className="num text-center text-lg text-ink">{STANDING.plain(formatDate(result.lastPayableDate), result.daysOverdue)}</p>
         <div className="rounded-hero bg-brand-50 px-7 py-11 text-center text-ink">
           <p className="leading-tight">
             <CountUp value={result.totalInterest} className="hero-number num block" />
@@ -127,7 +129,7 @@ export function Standing({ result, form, onBack, onTone, onReset, notes = [], as
           </Banner>
         )}
 
-        {asOf && <Timeline accepted={form.acceptanceDate} due={result.lastPayableDate} today={asOf} />}
+        {asOf && <Timeline start={form.invoiceDate} due={result.lastPayableDate} today={asOf} />}
 
         <dl className="num rounded-hero bg-surface text-base shadow-raised">
           <Row label={r.dueBy} value={formatDate(result.lastPayableDate)} />
@@ -224,12 +226,12 @@ function Row({ label, value, strong = false }: { label: string; value: string; s
 }
 
 /**
- * Accepted -> due -> today as a bar. Positions are layout only (how far along the bar to draw a
+ * Invoice date -> due -> today as a bar. Positions are layout only (how far along the bar to draw a
  * dot); every date shown comes from the form or compute().
  */
-function Timeline({ accepted, due, today }: { accepted: string; due: string; today: string }) {
-  const span = Math.max(1, daysBetween(accepted, today));
-  const at = (d: string) => 6 + (88 * Math.min(span, Math.max(0, daysBetween(accepted, d)))) / span;
+function Timeline({ start, due, today }: { start: string; due: string; today: string }) {
+  const span = Math.max(1, daysBetween(start, today));
+  const at = (d: string) => 6 + (88 * Math.min(span, Math.max(0, daysBetween(start, d)))) / span;
   const duePos = at(due);
   return (
     <div className="rounded-hero bg-surface px-7 pb-6 pt-8 shadow-raised">
@@ -237,15 +239,15 @@ function Timeline({ accepted, due, today }: { accepted: string; due: string; tod
         <div className="relative h-1.5 rounded-full bg-line">
           <span className="absolute inset-y-0 rounded-full bg-[#e0a22b]" style={{ left: `${duePos}%`, right: "6%" }} />
         </div>
-        {[at(accepted), duePos].map((left, i) => (
+        {[at(start), duePos].map((left, i) => (
           <span key={i} className="absolute top-[-5px] h-[18px] w-[18px] -translate-x-1/2 rounded-full border-4 border-brand-700 bg-surface" style={{ left: `${left}%` }} />
         ))}
         <span className="absolute top-[-5px] h-[18px] w-[18px] -translate-x-1/2 rounded-full border-4 border-[#e0a22b] bg-surface" style={{ left: "94%" }} />
       </div>
       <ol className="num mt-6 grid grid-cols-3 text-sm text-muted">
         <li>
-          <b className="block text-base text-ink">{formatDate(accepted)}</b>
-          {STANDING.timeline.accepted}
+          <b className="block text-base text-ink">{formatDate(start)}</b>
+          {STANDING.timeline.invoice}
         </li>
         <li className="text-center">
           <b className="block text-base text-ink">{formatDate(due)}</b>
@@ -257,35 +259,5 @@ function Timeline({ accepted, due, today }: { accepted: string; due: string; tod
         </li>
       </ol>
     </div>
-  );
-}
-
-/**
- * Shows the final amount (also on the server and for reduced motion); on screen it counts up from
- * zero once. The number itself is never computed here, only animated towards.
- */
-function CountUp({ value, className }: { value: number; className?: string }) {
-  const node = useRef<HTMLSpanElement>(null);
-  useLayoutEffect(() => {
-    const el = node.current;
-    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    let raf = 0;
-    const t0 = performance.now();
-    const tick = (t: number) => {
-      const k = Math.min(1, (t - t0) / 900);
-      el.textContent = formatINR(k === 1 ? value : value * (1 - Math.pow(1 - k, 3)));
-      if (k < 1) raf = requestAnimationFrame(tick);
-    };
-    el.textContent = formatINR(0);
-    raf = requestAnimationFrame(tick);
-    return () => {
-      cancelAnimationFrame(raf);
-      el.textContent = formatINR(value);
-    };
-  }, [value]);
-  return (
-    <span ref={node} className={className}>
-      {formatINR(value)}
-    </span>
   );
 }

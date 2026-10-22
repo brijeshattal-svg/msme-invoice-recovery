@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { checkEmail } from "@/lib/email/check";
+import { factsForTone } from "@/lib/email/facts";
 import { buildTemplate } from "@/lib/email/template";
 import { TONE_IDS } from "@/lib/email/tones";
 import { FORM, factsFor } from "./helpers";
@@ -33,9 +34,12 @@ describe("deterministic templates", () => {
     }
   });
 
-  it("all three tones read visibly differently", () => {
+  it("all six tones read visibly differently", () => {
     const facts = scenarios["60 days overdue"];
-    const [a, b, c] = TONE_IDS.map((t) => buildTemplate(facts, t));
+    const all = TONE_IDS.map((t) => buildTemplate(facts, t));
+    expect(new Set(all.map((e) => e.subject)).size).toBe(TONE_IDS.length);
+    expect(new Set(all.map((e) => e.body)).size).toBe(TONE_IDS.length);
+    const [a, b, c] = (["friendly", "firm", "formal"] as const).map((t) => buildTemplate(facts, t));
     expect(new Set([a.subject, b.subject, c.subject]).size).toBe(3);
     expect(new Set([a.body, b.body, c.body]).size).toBe(3);
     expect(a.body).toContain("Hi ");
@@ -72,8 +76,27 @@ describe("deterministic templates", () => {
     }
   });
 
-  it("states the reply-by without digits", () => {
-    for (const tone of TONE_IDS) {
+  it("last reminder states the reply-by date (today + 7, an approved fact) and still passes the check", () => {
+    const facts = factsForTone(scenarios["60 days overdue"], "lastReminder");
+    expect(facts.strings.replyByDate).toBe("29 Oct 2026"); // TODAY 22 Oct 2026 + 7
+    expect(facts.required).toContain("replyByDate");
+    const email = buildTemplate(facts, "lastReminder");
+    expect(email.body).toContain("by 29 Oct 2026");
+    expect(checkEmail(email, facts).ok).toBe(true);
+    // the other tones neither need nor use it
+    expect(factsForTone(scenarios["60 days overdue"], "friendly").required).not.toContain("replyByDate");
+    expect(buildTemplate(facts, "friendly").body).not.toContain("29 Oct 2026");
+  });
+
+  it("an invented reply-by date is still rejected", () => {
+    const facts = factsForTone(scenarios["60 days overdue"], "lastReminder");
+    const email = buildTemplate(facts, "lastReminder");
+    const forged = { ...email, body: email.body.replace("29 Oct 2026", "30 Oct 2026") };
+    expect(checkEmail(forged, facts).ok).toBe(false);
+  });
+
+  it("states the reply-by without digits (all but the last reminder)", () => {
+    for (const tone of TONE_IDS.filter((t) => t !== "lastReminder")) {
       const { body } = buildTemplate(scenarios["60 days overdue"], tone);
       expect(body, tone).toMatch(/this week|end of (this|next) week/);
     }

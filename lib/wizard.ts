@@ -1,6 +1,7 @@
 import type { ConfidenceKey, ExtractedInvoice } from "./ai/schemas";
 import { COPY } from "./copy";
 import { isValidISODate } from "./engine/dates";
+import type { EngineInput } from "./engine";
 import type { Tone } from "./email/tones";
 import { emptyEligibility, type Eligibility } from "./standing";
 
@@ -48,6 +49,8 @@ export type State = {
   termsHint: string | null;
   currency: string | null;
   acceptanceEdited: boolean;
+  /** Fields filled from the invoice that the AI was sure about: shown with "Read from your invoice". */
+  read: Partial<Record<FieldKey, true>>;
   /** Optional answers to "Does the law apply to you?"; they only add hedged notes. */
   eligibility: Eligibility;
 };
@@ -76,6 +79,7 @@ export const initialState: State = {
   termsHint: null,
   currency: null,
   acceptanceEdited: false,
+  read: {},
   eligibility: emptyEligibility,
 };
 
@@ -132,8 +136,12 @@ export function reducer(s: State, a: Action): State {
       return { ...s, upload: "reading", error: null };
     case "failed":
       return { ...s, upload: "error", error: a.message };
-    case "extracted":
-      return { ...initialState, step: "check", ...fromExtraction(a.data) };
+    case "extracted": {
+      const x = fromExtraction(a.data);
+      const read: State["read"] = {};
+      for (const [, fk] of MAP) if (String(x.form[fk]).trim() !== "" && !x.flagged[fk]) read[fk] = true;
+      return { ...initialState, step: "check", ...x, read };
+    }
     case "manual":
       return { ...initialState, step: "check" };
     case "edit": {
@@ -143,9 +151,11 @@ export function reducer(s: State, a: Action): State {
       if (a.field === "invoiceDate" && !acceptanceEdited) form.acceptanceDate = String(a.value);
       const flagged = { ...s.flagged };
       delete flagged[a.field];
+      const read = { ...s.read };
+      delete read[a.field];
       // Re-entering the amount is the founder confirming it is in rupees (see validateForm).
       const currency = a.field === "amount" && s.currency !== null && s.currency !== "INR" ? "INR" : s.currency;
-      return { ...s, form, flagged, acceptanceEdited, currency };
+      return { ...s, form, flagged, read, acceptanceEdited, currency };
     }
     case "eligibility":
       return { ...s, eligibility: { ...s.eligibility, [a.field]: a.value } as Eligibility };
@@ -196,6 +206,22 @@ export function validateForm(f: FormValues, today: string, currency: string | nu
  * unavailable. Must match the PDF (scripts/make-sample-invoice.mjs); the date is fixed, not
  * relative to today, so both always agree. Fictional parties only.
  */
+/** Fixed date the landing's sample card is worked out to, so the example never changes. */
+export const SAMPLE_PREVIEW_AS_OF = "2026-10-22";
+
+/** Engine input for the landing's sample card: the sample invoice, no agreement, accepted on the invoice date. */
+export function samplePreviewInput(): EngineInput {
+  const s = sampleExtraction();
+  return {
+    amount: s.amountTotal ?? 0,
+    invoiceDate: s.invoiceDate ?? "",
+    acceptanceDate: s.invoiceDate ?? "",
+    agreementDays: null,
+    udyamDate: "2024-01-15",
+    asOf: SAMPLE_PREVIEW_AS_OF,
+  };
+}
+
 export function sampleExtraction(): ExtractedInvoice {
   return {
     isInvoice: true,

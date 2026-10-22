@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { draftEmail } from "@/lib/ai/draft";
 import { cleanString } from "@/lib/ai/normalize";
-import { buildFacts } from "@/lib/email/facts";
+import { buildFacts, factsForTone } from "@/lib/email/facts";
 import { TONE_IDS } from "@/lib/email/tones";
 import { compute, isValidISODate } from "@/lib/engine";
 import { ipFrom, rateLimit } from "@/lib/ratelimit";
@@ -69,8 +69,9 @@ export async function POST(req: Request) {
   });
   if (result.status !== "overdue") return respond(started, 409, { error: "not_overdue" });
 
-  const facts = buildFacts(p, result);
-  const draft = await draftEmail(facts, p.tone as (typeof TONE_IDS)[number]);
+  const tone = p.tone as (typeof TONE_IDS)[number];
+  const facts = factsForTone(buildFacts(p, result, todayIST()), tone);
+  const draft = await draftEmail(facts, tone);
   return respond(
     started,
     200,

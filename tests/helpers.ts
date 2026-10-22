@@ -27,5 +27,6 @@ export function factsFor(form: FormValues = FORM, today = TODAY): Facts {
   return buildFacts(
     { clientName: form.clientName, invoiceNumber: form.invoiceNumber, invoiceDate: form.invoiceDate, amount: Number(form.amount) },
     overdueFor(form, today),
+    today,
   );
 }

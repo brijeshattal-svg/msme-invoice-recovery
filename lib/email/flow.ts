@@ -2,7 +2,7 @@ import { compute } from "@/lib/engine";
 import { toEngineInput } from "@/lib/standing";
 import type { FormValues } from "@/lib/wizard";
 import { checkEmail } from "./check";
-import { buildFacts, type Facts, type Overdue } from "./facts";
+import { buildFacts, factsForTone, type Facts, type Overdue } from "./facts";
 import { buildTemplate } from "./template";
 import type { Tone } from "./tones";
 
@@ -27,6 +27,7 @@ export function factsFromForm(form: FormValues, today: string): Facts | null {
   return buildFacts(
     { clientName: form.clientName, invoiceNumber: form.invoiceNumber, invoiceDate: form.invoiceDate, amount: Number(form.amount) },
     r as Overdue,
+    today,
   );
 }
 
@@ -56,8 +57,9 @@ export async function getDraft(
   today: string,
   fetchDraft: DraftFetcher,
 ): Promise<Drafted | null> {
-  const facts = factsFromForm(form, today);
-  if (!facts) return null;
+  const base = factsFromForm(form, today);
+  if (!base) return null;
+  const facts = factsForTone(base, tone);
   try {
     const d = await fetchDraft(payloadFromForm(form, tone));
     if (checkEmail(d, facts).ok) return { subject: d.subject, body: d.body, source: d.source, facts };

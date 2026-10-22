@@ -17,7 +17,7 @@ export function Confirm({ state, dispatch, onSubmit }: Props) {
   const heading = useRef<HTMLHeadingElement>(null);
   const [errors, setErrors] = useState<FormErrors>({});
   const [today] = useState(() => todayIST());
-  const { form, flagged, termsHint, currency } = state;
+  const { form, flagged, read, termsHint, currency } = state;
 
   useEffect(() => heading.current?.focus(), []);
   const notes = eligibilityNotes(state.eligibility, form);
@@ -60,24 +60,21 @@ export function Confirm({ state, dispatch, onSubmit }: Props) {
       </div>
 
       <Group label="From your invoice">
-        <Field id="f-clientName" label="Client name" flag={flagged.clientName} error={errors.clientName}>
+        <Field id="f-clientName" label="Client name" flag={flagged.clientName} read={read.clientName} error={errors.clientName}>
           {(cls, d) => <input id="f-clientName" className={cls} aria-describedby={d} aria-invalid={!!errors.clientName} value={form.clientName} onChange={set("clientName")} autoComplete="off" />}
         </Field>
-        <Field id="f-invoiceNumber" label="Invoice number" flag={flagged.invoiceNumber} error={errors.invoiceNumber}>
+        <Field id="f-invoiceNumber" label="Invoice number" flag={flagged.invoiceNumber} read={read.invoiceNumber} error={errors.invoiceNumber}>
           {(cls, d) => <input id="f-invoiceNumber" className={cls} aria-describedby={d} aria-invalid={!!errors.invoiceNumber} value={form.invoiceNumber} onChange={set("invoiceNumber")} autoComplete="off" />}
         </Field>
-        <Field id="f-invoiceDate" label="Invoice date" flag={flagged.invoiceDate} error={errors.invoiceDate}>
+        <Field id="f-invoiceDate" label="Invoice date" flag={flagged.invoiceDate} read={read.invoiceDate} error={errors.invoiceDate}>
           {(cls, d) => <input id="f-invoiceDate" type="date" max={today} className={`${cls} num`} aria-describedby={d} aria-invalid={!!errors.invoiceDate} value={form.invoiceDate} onChange={set("invoiceDate")} />}
         </Field>
-        <Field id="f-amount" label="Amount (₹, incl. GST)" flag={flagged.amount} error={errors.amount}>
+        <Field id="f-amount" label="Amount (₹, incl. GST)" flag={flagged.amount} read={read.amount} error={errors.amount}>
           {(cls, d) => <input id="f-amount" type="number" inputMode="decimal" min="0" step="0.01" className={`${cls} num`} aria-describedby={d} aria-invalid={!!errors.amount} value={form.amount} onChange={set("amount")} />}
         </Field>
       </Group>
 
-      <Group label="Only you know these">
-        <Field id="f-udyamDate" label="Udyam registration date" help={COPY.udyamHelp} error={errors.udyamDate}>
-          {(cls, d) => <input id="f-udyamDate" type="date" max={today} className={`${cls} num`} aria-describedby={d} aria-invalid={!!errors.udyamDate} value={form.udyamDate} onChange={set("udyamDate")} />}
-        </Field>
+      <Group label="What you agreed">
 
         <div className="grid gap-x-4 gap-y-1.5 border-b border-line py-4 sm:grid-cols-[170px_1fr] sm:items-center">
           <p id="agree-l" className="text-base font-semibold">
@@ -111,8 +108,12 @@ export function Confirm({ state, dispatch, onSubmit }: Props) {
         </Field>
       </Group>
 
-      <Group label={ELIGIBILITY.title}>
-        <p className="pt-4 text-sm text-muted">{ELIGIBILITY.intro}</p>
+      <Group label="Only you know">
+        <Field id="f-udyamDate" label="Udyam registration date" help={COPY.udyamHelp} error={errors.udyamDate}>
+          {(cls, d) => <input id="f-udyamDate" type="date" max={today} className={`${cls} num`} aria-describedby={d} aria-invalid={!!errors.udyamDate} value={form.udyamDate} onChange={set("udyamDate")} />}
+        </Field>
+        <h4 className="pt-4 font-semibold">{ELIGIBILITY.title}</h4>
+        <p className="pt-1 text-sm text-muted">{ELIGIBILITY.intro}</p>
         <div className="flex flex-col gap-2 border-b border-line py-4">
           <p id="q-enterprise" className="text-base font-semibold">
             {ELIGIBILITY.enterpriseQ}
@@ -150,8 +151,9 @@ export function Confirm({ state, dispatch, onSubmit }: Props) {
         </div>
       </Group>
 
-      <div className="mt-2 flex flex-col items-center gap-1.5">
-        <Button type="submit" size="lg" className="px-7">
+      {/* Sticky on phones so Continue is always in reach; inline from sm up. */}
+      <div className="sticky bottom-0 z-10 -mx-5 mt-2 flex flex-col items-center gap-1.5 border-t border-line px-5 pb-[calc(10px+env(safe-area-inset-bottom))] pt-3 max-sm:glass sm:static sm:mx-0 sm:border-0 sm:p-0">
+        <Button type="submit" size="lg" className="w-full px-7 sm:w-auto">
           Check what I may be owed
         </Button>
         <Button variant="link" tone="muted" onClick={() => dispatch({ type: "go", step: "upload" })} className="text-[15px] no-underline hover:underline">

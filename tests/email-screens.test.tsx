@@ -31,14 +31,17 @@ const send = (draft: DraftState) =>
   text(renderToStaticMarkup(<SendScreen draft={draft} facts={facts} onEdit={noop} onChangeTone={noop} onBack={noop} />));
 
 describe("Tone screen", () => {
-  it("shows three cards with the exact one-line guidance, the selected state and the button", () => {
+  it("shows six cards in two groups with the exact one-line guidance, the selected state and the button", () => {
     const html = renderToStaticMarkup(<ToneScreen tone="firm" onSelect={noop} onDraft={noop} onBack={noop} />);
     const t = text(html);
     expect(t).toContain("Friendly Good relationship, first gentle nudge.");
     expect(t).toContain("Firm You've already reminded them once.");
     expect(t).toContain("Formal Large company, finance team, you want a clear paper trail.");
     expect(t).toContain("Draft my email");
-    expect(html.match(/type="radio"/g)).toHaveLength(3);
+    expect(t).toContain("Relationship-first Retainer or repeat clients");
+    expect(t).toContain("Finance-team ready");
+    expect(t).toContain("Last friendly reminder");
+    expect(html.match(/type="radio"/g)).toHaveLength(6);
     expect(html.match(/checked=""/g)).toHaveLength(1);
     expect(html).toMatch(/value="firm"[^>]*checked=""|checked=""[^>]*value="firm"/);
   });
