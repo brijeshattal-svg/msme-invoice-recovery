@@ -1,4 +1,5 @@
 import { COPY } from "./copy";
+import { CLIENT_TIMEOUT_MS } from "./limits";
 import type { ExtractedInvoice } from "./ai/schemas";
 import type { DraftPayload, ServerDraft } from "./email/flow";
 import type { BlockerAnalysis } from "./blockers/types";
@@ -11,6 +12,7 @@ export async function requestDraft(payload: DraftPayload): Promise<ServerDraft> 
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(CLIENT_TIMEOUT_MS),
   });
   if (!res.ok) throw new Error(`draft failed: ${res.status}`);
   const j = (await res.json()) as Partial<ServerDraft>;
@@ -26,7 +28,7 @@ export async function extractInvoice(file: File): Promise<ExtractedInvoice> {
   body.append("file", file);
   let res: Response;
   try {
-    res = await fetch("/api/extract", { method: "POST", body });
+    res = await fetch("/api/extract", { method: "POST", body, signal: AbortSignal.timeout(CLIENT_TIMEOUT_MS) });
   } catch {
     throw new ExtractFailure(COPY.network);
   }
@@ -54,6 +56,7 @@ export async function analyseReply(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ reply, context: context || undefined }),
+      signal: AbortSignal.timeout(CLIENT_TIMEOUT_MS),
     });
   } catch {
     return { ok: false, error: "network" };

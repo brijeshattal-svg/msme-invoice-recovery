@@ -16,7 +16,8 @@ export const COPY = {
   trySample: "Try the sample",
   privacy: "Your file is sent to an AI service to be read. This app doesn't save it.",
   disclaimer: "Not legal advice. Calculates and drafts; you decide what to send.",
-  reading: "Reading your invoice... about 10 seconds",
+  reading: "Reading your invoice... usually 10 to 20 seconds",
+  slowReading: "Taking longer than usual. You can keep waiting, or enter the details by hand instead.",
   noInvoice: "No invoice found in this file. Please try another.",
   pdfTooLarge: "That PDF is too large. Try a photo of it or a smaller export.",
   imageTooLarge: "That photo is still too large after shrinking it. Try a smaller one.",
@@ -131,8 +132,10 @@ export const EMAIL = {
   beforeTitle: "Before you send",
   beforeSteps: ["Replace the highlighted placeholders.", "Send it from your own email address.", "Note the date you sent it."],
   writing: "Writing your email...",
+  slowDraft: "Taking longer than usual. You can keep waiting, or use the standard draft: it has the same checked figures.",
+  useStandard: "Use the standard draft now",
   checkedChip: "Numbers checked against your calculation",
-  templateChip: "Standard draft (AI was unavailable). Same checked figures; you can send it as is.",
+  templateChip: "Standard draft (written without AI). Same checked figures; you can send it as is.",
   subjectLabel: "Subject",
   bodyLabel: "Email",
   copy: "Copy email",
@@ -493,4 +496,62 @@ export const CASH_COPY = {
     "Items after the 30-day window are listed but not counted.",
     "Nothing here is saved, and this is not financial advice.",
   ],
+} as const;
+
+// /privacy: the full privacy note and terms. Accurate, not reassuring; hedged where we rely on
+// someone else's terms. `paid` comes from GEMINI_BILLING ("paid" only when billing is on).
+export const PRIVACY = {
+  title: "Privacy and terms",
+  intro: "FortyFive is built to keep as little as possible. This page says exactly what happens to what you upload, what we don't do, and the limits of what the app tells you.",
+  link: "Privacy and terms",
+  updated: "Last reviewed 23 Oct 2026.",
+  summaryTitle: "In short",
+  summary: [
+    "No login and no database. We don't keep your invoice, the details or the email.",
+    "To read the invoice and write the email, what you send goes to Google's Gemini AI service.",
+    "Everything you see lives in this browser tab and is gone when you close or refresh it.",
+    "Nothing is sent to your client. You copy the email and send it yourself.",
+  ],
+  flowTitle: "What happens to your invoice",
+  flow: [
+    "You choose a file. It goes to our server, is held in memory only while it is read, and is never written to disk.",
+    "Our server sends it to Google's Gemini API, which returns the client name, invoice number, date and amount. You check every field.",
+    "The due date and interest are worked out by plain code, in your browser and on our server. No AI is involved in the maths.",
+    "When you ask for an email, the details you confirmed (not the file) are sent to Gemini again to write it. Code then checks every number before you see it.",
+    "When you leave or refresh the page, all of it is gone. We have no copy.",
+  ],
+  notTitle: "What we don't do",
+  not: [
+    "No accounts, no passwords, no database, no file storage.",
+    "No advertising or tracking cookies, and no analytics on what you upload or type.",
+    "We never email, message or contact your client.",
+    "The tools pages (priorities, cash forecast, reports) keep their lists in this tab's memory only. The CSV report is built in your browser.",
+  ],
+  logsTitle: "What is logged",
+  logs: [
+    "Our server logs whether each request worked, how long it took and which AI model answered. Never the file, the details, the client's reply or the email.",
+    "Our host (Vercel) keeps standard request records, such as the time, the page and the status, for a short period.",
+  ],
+  aiTitle: "Google, our AI provider",
+  aiPaid:
+    "This version uses a paid (billing-enabled) Gemini plan. Google's terms for paid services say it does not use prompts or responses to improve its products, though it may keep them for a limited time to detect abuse. Check the current terms below.",
+  aiFree:
+    "This version uses Google's free Gemini tier. Google's terms for unpaid services let Google use what is sent to improve its products, and human reviewers may read it. Please don't upload a real client's invoice here: use the sample, or test invoices.",
+  aiTerms: "Gemini API terms (Google)",
+  aiTermsUrl: "https://ai.google.dev/gemini-api/terms",
+  rightsTitle: "Your data and your rights",
+  rights:
+    "Because we store nothing, there is nothing for us to show you, correct or delete afterwards. To ask a question about privacy, open an issue on the project's GitHub page, and please don't include any invoice details there.",
+  contactLabel: "Project page on GitHub",
+  contactUrl: "https://github.com/brijeshattal-svg/msme-invoice-recovery/issues",
+  termsTitle: "Terms of use",
+  terms: [
+    "Not legal, tax or financial advice. FortyFive works out what may be owed and drafts an email; you decide what to send. For a dispute, talk to a lawyer or a chartered accountant.",
+    "The figures are only as good as the details you enter. We don't verify the invoice, your Udyam registration, the acceptance date or any agreement.",
+    "The MSMED Act's payment rules cover micro and small enterprises registered on Udyam, selling to buyers in India. Whether registration after the work began is enough has been referred to a larger bench of the Supreme Court.",
+    "Interest uses the RBI Bank Rate table built into the app, which we update by hand after each RBI decision. The app shows the date it was last checked.",
+    "AI can misread an invoice, so check every field. Code checks every number in the email, but read the whole email before you send it: you are responsible for what you send.",
+    "This is an early version provided as it is, without any guarantee that it is complete, error-free or always available.",
+  ],
+  back: "Back to Quick Check",
 } as const;

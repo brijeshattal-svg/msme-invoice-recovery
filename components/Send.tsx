@@ -14,6 +14,7 @@ import type { DraftState } from "@/lib/wizard";
 import { Banner } from "./ui/Banner";
 import { Button } from "./ui/Button";
 import { Skeleton } from "./ui/Skeleton";
+import { useSlow } from "./ui/useSlow";
 import { Spinner } from "./ui/Spinner";
 
 type Props = {
@@ -24,6 +25,8 @@ type Props = {
   today?: string;
   factsOn?: (date: string) => Facts | null;
   onEdit: (field: "subject" | "body", value: string) => void;
+  /** Shown once the AI is slow: skip the wait and use the standard draft. */
+  onUseStandard?: () => void;
   onChangeTone: () => void;
   onBack: () => void;
 };
@@ -49,7 +52,7 @@ function Highlight({ text }: { text: string }) {
   );
 }
 
-export function SendScreen({ draft, facts, tone, today, factsOn, onEdit, onChangeTone, onBack }: Props) {
+export function SendScreen({ draft, facts, tone, today, factsOn, onEdit, onUseStandard, onChangeTone, onBack }: Props) {
   const heading = useRef<HTMLHeadingElement>(null);
   const [toast, setToast] = useState<string | null>(null);
   // Held in this tab's memory only, like everything else (CLAUDE.md rule 3).
@@ -62,6 +65,7 @@ export function SendScreen({ draft, facts, tone, today, factsOn, onEdit, onChang
   }, [toast]);
 
   const ready = draft.status === "ready";
+  const slow = useSlow(draft.status === "loading");
   const hasPlaceholders = ready && (HAS_PLACEHOLDER.test(draft.body) || HAS_PLACEHOLDER.test(draft.subject));
 
   // After an edit the generated text's guarantee is gone: re-check in the browser, warn but never block.
@@ -145,6 +149,14 @@ export function SendScreen({ draft, facts, tone, today, factsOn, onEdit, onChang
             <Skeleton className="h-5" />
             <Skeleton className="h-5 w-2/5" />
           </div>
+          {slow && onUseStandard && (
+            <div className="flex flex-col items-center gap-3 text-center">
+              <p className="text-base text-muted">{EMAIL.slowDraft}</p>
+              <Button variant="secondary" onClick={onUseStandard}>
+                {EMAIL.useStandard}
+              </Button>
+            </div>
+          )}
         </div>
       )}
 

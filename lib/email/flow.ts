@@ -49,6 +49,17 @@ export function payloadFromForm(form: FormValues, tone: Tone, waiver = false): D
 }
 
 /**
+ * The deterministic standard draft for the confirmed form (same checked figures, no AI). Used when
+ * the AI fails, and when the founder chooses not to wait. Null when the invoice is not overdue today.
+ */
+export function templateDraft(form: FormValues, tone: Tone, today: string, waiver = false): Drafted | null {
+  const base = factsFromForm(form, today);
+  if (!base) return null;
+  const facts = factsForTone(base, tone, { waiver });
+  return { ...buildTemplate(facts, tone), source: "template", facts };
+}
+
+/**
  * Gets the email: ask the server, then re-run the number check here before trusting the answer
  * (so the "numbers checked" chip is never shown for text that did not pass). Any failure, or a
  * draft that does not pass, yields the deterministic template: the journey never dead-ends.

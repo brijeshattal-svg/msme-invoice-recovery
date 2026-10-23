@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { COPY, PROCESS } from "@/lib/copy";
+import { COPY, PRIVACY, PROCESS } from "@/lib/copy";
 import { compute, lastRateChangeDate } from "@/lib/engine";
 import { formatDate } from "@/lib/format";
 import { SAMPLE_PREVIEW_AS_OF, samplePreviewInput, type State } from "@/lib/wizard";
@@ -12,6 +13,7 @@ import { Button } from "./ui/Button";
 import { cx } from "./ui/cx";
 import { Disclosure } from "./ui/Disclosure";
 import { Spinner } from "./ui/Spinner";
+import { useSlow } from "./ui/useSlow";
 
 type Props = {
   upload: State["upload"];
@@ -27,6 +29,7 @@ export function Upload({ upload, error, onFile, onSample, onManual }: Props) {
   const input = useRef<HTMLInputElement>(null);
   const [over, setOver] = useState(false);
   const busy = upload === "reading";
+  const slow = useSlow(busy);
 
   useEffect(() => heading.current?.focus(), []);
 
@@ -91,6 +94,7 @@ export function Upload({ upload, error, onFile, onSample, onManual }: Props) {
                 {COPY.reading}
               </p>
             )}
+            {slow && <p className="mt-2 text-[15px] text-muted">{COPY.slowReading}</p>}
           </div>
         </div>
       </div>
@@ -99,7 +103,7 @@ export function Upload({ upload, error, onFile, onSample, onManual }: Props) {
       </div>
 
       <div className="mt-3.5 flex flex-wrap justify-center gap-x-2">
-        <Button variant="link" tone="muted" disabled={busy} onClick={onManual} className="px-2.5 text-[15px] no-underline hover:underline">
+        <Button variant="link" tone={slow ? "brand" : "muted"} onClick={onManual} className="px-2.5 text-[15px] no-underline hover:underline">
           Enter details manually
         </Button>
       </div>
@@ -165,6 +169,9 @@ export function Upload({ upload, error, onFile, onSample, onManual }: Props) {
             <li key={p}>{p}</li>
           ))}
         </ul>
+        <p className="px-5 pb-4">
+          <Link href="/privacy" className="font-semibold text-brand-700 underline underline-offset-2 hover:text-brand-800">{PRIVACY.link}</Link>
+        </p>
       </Disclosure>
     </section>
   );

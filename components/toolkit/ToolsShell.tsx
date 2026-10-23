@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { TOOLKIT, type ToolId } from "@/lib/copy";
+import { PRIVACY, TOOLKIT, type ToolId } from "@/lib/copy";
 import { Help } from "../Help";
 import { cx } from "../ui/cx";
 
@@ -104,7 +104,9 @@ export function ToolsShell({ children }: { children: ReactNode }) {
 
         <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-5 pb-28 pt-8 lg:px-8 lg:pb-12">
           {children}
-          <p className="mt-auto pt-4 text-center text-sm text-muted">{TOOLKIT.notAdvice}</p>
+          <p className="mt-auto pt-4 text-center text-sm text-muted">
+            {TOOLKIT.notAdvice} <Link href="/privacy" className="font-semibold text-brand-700 underline underline-offset-2 hover:text-brand-800">{PRIVACY.link}</Link>
+          </p>
         </main>
       </div>
 

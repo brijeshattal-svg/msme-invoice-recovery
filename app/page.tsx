@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useReducer } from "react";
+import { useReducer, useRef } from "react";
 import { Confirm } from "@/components/Confirm";
 import { SendScreen } from "@/components/Send";
 import { Standing } from "@/components/Standing";
@@ -10,8 +11,8 @@ import { ToneScreen } from "@/components/Tone";
 import { Upload } from "@/components/Upload";
 import { newId, useToolkit } from "@/components/toolkit/state";
 import { extractInvoice, ExtractFailure, requestDraft } from "@/lib/api";
-import { COPY } from "@/lib/copy";
-import { factsFromForm, getDraft } from "@/lib/email/flow";
+import { COPY, PRIVACY } from "@/lib/copy";
+import { factsFromForm, getDraft, templateDraft } from "@/lib/email/flow";
 import { compute } from "@/lib/engine";
 import { compressImage, UploadError } from "@/lib/image";
 import { eligibilityNotes, toEngineInput } from "@/lib/standing";
@@ -23,6 +24,10 @@ export default function Home() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const router = useRouter();
   const { addFromQuickCheck } = useToolkit();
+  // Each AI wait gets a ticket; an answer that arrives after the founder moved on (entered the
+  // details by hand, took the standard draft) no longer matches and is ignored.
+  const readJob = useRef(0);
+  const draftJob = useRef(0);
 
   // Only on the founder's click: add this invoice to the shared in-memory list and open Priorities.
   function addToPriorities() {
@@ -42,37 +47,56 @@ export default function Home() {
   }
 
   async function handleFile(file: File) {
+    const job = ++readJob.current;
     dispatch({ type: "reading" });
     try {
       const data = await extractInvoice(await compressImage(file));
-      dispatch({ type: "extracted", data });
+      if (job === readJob.current) dispatch({ type: "extracted", data });
     } catch (e) {
       const known = e instanceof UploadError || e instanceof ExtractFailure;
-      dispatch({ type: "failed", message: known ? e.message : COPY.aiFailed });
+      if (job === readJob.current) dispatch({ type: "failed", message: known ? e.message : COPY.aiFailed });
     }
+  }
+
+  // Always available, even while the AI is reading: never make the founder wait for it.
+  function handleManual() {
+    readJob.current++;
+    dispatch({ type: "manual" });
   }
 
   // The sample goes through the real extraction path; if the file or the AI is unavailable,
   // fall back to hard-coded data for the same invoice so the demo never breaks (CLAUDE.md rule 8).
   async function handleSample() {
+    const job = ++readJob.current;
     dispatch({ type: "reading" });
+    let data;
     try {
       const res = await fetch("/sample/sample-invoice.pdf");
       if (!res.ok) throw new Error("no sample file");
       const blob = await res.blob();
-      const data = await extractInvoice(new File([blob], "sample-invoice.pdf", { type: "application/pdf" }));
-      dispatch({ type: "extracted", data });
+      data = await extractInvoice(new File([blob], "sample-invoice.pdf", { type: "application/pdf" }));
     } catch {
-      dispatch({ type: "extracted", data: sampleExtraction() });
+      data = sampleExtraction();
     }
+    if (job === readJob.current) dispatch({ type: "extracted", data });
   }
 
   // Server draft -> re-checked in the browser -> template on any failure (never dead-ends).
   async function handleDraft() {
+    const job = ++draftJob.current;
     dispatch({ type: "draftLoading" });
     const drafted = await getDraft(state.form, state.tone, todayIST(), requestDraft, state.waiver);
+    if (job !== draftJob.current) return;
     if (drafted) dispatch({ type: "drafted", subject: drafted.subject, body: drafted.body, source: drafted.source });
     else dispatch({ type: "go", step: "standing" }); // not overdue today: back to the standing screen
+  }
+
+  // The founder chose not to wait for the AI: the standard draft, same checked figures.
+  function takeStandardDraft() {
+    draftJob.current++;
+    const t = templateDraft(state.form, state.tone, todayIST(), state.waiver);
+    if (t) dispatch({ type: "drafted", subject: t.subject, body: t.body, source: t.source });
+    else dispatch({ type: "go", step: "standing" });
   }
 
   return (
@@ -88,7 +112,7 @@ export default function Home() {
           error={state.error}
           onFile={handleFile}
           onSample={handleSample}
-          onManual={() => dispatch({ type: "manual" })}
+          onManual={handleManual}
         />
       )}
 
@@ -129,12 +153,15 @@ export default function Home() {
           today={todayIST()}
           factsOn={(date) => factsFromForm(state.form, date)}
           onEdit={(field, value) => dispatch({ type: "editDraft", field, value })}
+          onUseStandard={takeStandardDraft}
           onChangeTone={() => dispatch({ type: "go", step: "tone" })}
           onBack={() => dispatch({ type: "go", step: "standing" })}
         />
       )}
 
-      <footer className="mt-auto text-sm text-muted">{COPY.disclaimer}</footer>
+      <footer className="mt-auto text-sm text-muted">
+        {COPY.disclaimer} <Link href="/privacy" className="font-semibold text-brand-700 underline underline-offset-2 hover:text-brand-800">{PRIVACY.link}</Link>
+      </footer>
       </main>
     </>
   );

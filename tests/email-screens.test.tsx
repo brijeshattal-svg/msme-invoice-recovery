@@ -79,7 +79,7 @@ describe("Send screen", () => {
 
   it("template draft: grey 'Standard draft' chip and no 'checked' claim", () => {
     const t = send(ready({ source: "template" }));
-    expect(t).toContain("Standard draft (AI was unavailable)");
+    expect(t).toContain("Standard draft (written without AI)");
     expect(t).not.toContain("Numbers checked against your calculation");
   });
 
