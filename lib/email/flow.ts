@@ -1,4 +1,4 @@
-import { compute } from "@/lib/engine";
+import { compute, type Payment } from "@/lib/engine";
 import { toEngineInput } from "@/lib/standing";
 import type { FormValues } from "@/lib/wizard";
 import { checkEmail } from "./check";
@@ -17,6 +17,8 @@ export type DraftPayload = {
   tone: Tone;
   /** The founder chose to offer waiving the interest (never applies to the gentle check-in). */
   waiver?: boolean;
+  /** Part payments (inputs only; the server re-computes everything). Absent when none. */
+  payments?: Payment[];
 };
 export type ServerDraft = { subject: string; body: string; source: "ai" | "template" };
 export type DraftFetcher = (payload: DraftPayload) => Promise<ServerDraft>;
@@ -45,6 +47,7 @@ export function payloadFromForm(form: FormValues, tone: Tone, waiver = false): D
     udyamDate: form.udyamDate,
     tone,
     ...(waiver ? { waiver: true } : {}),
+    ...(e.payments ? { payments: e.payments } : {}),
   };
 }
 

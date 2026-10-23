@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { RATE_HISTORY_START, daysBetween, lastRateChangeDate, type EngineResult, type MonthRow } from "@/lib/engine";
-import { ELIGIBILITY, PRIORITIES_COPY, RATES, STANDING } from "@/lib/copy";
+import { ELIGIBILITY, PAYMENTS, PRIORITIES_COPY, RATES, STANDING } from "@/lib/copy";
 import { rateFreshness } from "@/lib/standing";
 import { formatDate, formatINR, formatMonth, formatPercent } from "@/lib/format";
 import type { FormValues } from "@/lib/wizard";
@@ -32,6 +32,8 @@ const rateText = (m: MonthRow) =>
 
 function Working({ rows }: { rows: MonthRow[] }) {
   const c = STANDING.columns;
+  // The "Paid" column only appears when the founder entered part payments.
+  const hasPaid = rows.some((m) => m.paid);
   return (
     <Disclosure summary={STANDING.workingTitle} className="@container" summaryClassName="px-6 py-4 text-base text-link">
       {/* Wide container: a table. */}
@@ -42,6 +44,7 @@ function Working({ rows }: { rows: MonthRow[] }) {
               <th scope="col" className="py-2 pr-2 font-semibold">{c.month}</th>
               <th scope="col" className="py-2 pr-2 text-right font-semibold">{c.days}</th>
               <th scope="col" className="py-2 pr-2 text-right font-semibold">{c.opening}</th>
+              {hasPaid && <th scope="col" className="py-2 pr-2 text-right font-semibold">{PAYMENTS.paidColumn}</th>}
               <th scope="col" className="py-2 pr-2 font-semibold">{c.rate}</th>
               <th scope="col" className="py-2 pr-2 text-right font-semibold">{c.interest}</th>
               <th scope="col" className="py-2 text-right font-semibold">{c.closing}</th>
@@ -53,6 +56,7 @@ function Working({ rows }: { rows: MonthRow[] }) {
                 <th scope="row" className="py-2 pr-2 font-medium">{formatMonth(m.month)}</th>
                 <td className="py-2 pr-2 text-right">{m.days}</td>
                 <td className="py-2 pr-2 text-right">{formatINR(m.openingBalance)}</td>
+                {hasPaid && <td className="py-2 pr-2 text-right">{m.paid ? `−${formatINR(m.paid)}` : "–"}</td>}
                 <td className="py-2 pr-2">
                   {rateText(m).map((t) => (
                     <span key={t} className="block">{t}</span>
@@ -76,6 +80,12 @@ function Working({ rows }: { rows: MonthRow[] }) {
             <dl className="mt-2 grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 text-sm">
               <dt>{c.opening}</dt>
               <dd className="text-right">{formatINR(m.openingBalance)}</dd>
+              {m.paid ? (
+                <>
+                  <dt>{PAYMENTS.paidColumn}</dt>
+                  <dd className="text-right">−{formatINR(m.paid)}</dd>
+                </>
+              ) : null}
               <dt>{c.rate}</dt>
               <dd className="text-right">
                 {rateText(m).map((t) => (
@@ -138,6 +148,15 @@ export function Standing({ result, form, onBack, onTone, onReset, notes = [], as
           <Row label={r.interestFrom} value={formatDate(result.interestStartDate)} />
           <Row label={r.daysOverdue} value={String(result.daysOverdue)} />
           <Row label={r.amount} value={formatINR(Number(form.amount))} />
+          {result.paidSoFar !== undefined && (
+            <>
+              <Row
+                label={PAYMENTS.receivedLabel}
+                value={`${formatINR(result.paidSoFar)}${result.tdsSoFar ? ` (${PAYMENTS.tdsNote(formatINR(result.tdsSoFar))})` : ""}`}
+              />
+              <Row label={PAYMENTS.unpaidLabel} value={formatINR(result.unpaidAmount ?? 0)} />
+            </>
+          )}
           <Row label={r.interest} value={formatINR(result.totalInterest)} />
           <Row label={r.total} value={formatINR(result.totalDue)} strong />
         </dl>
@@ -147,6 +166,7 @@ export function Standing({ result, form, onBack, onTone, onReset, notes = [], as
           <section aria-labelledby="how-h" className="flex flex-col gap-2 border-t border-line px-6 py-5">
             <h3 id="how-h" className="font-semibold">{STANDING.howTitle}</h3>
             <p className="text-base leading-7 text-muted">{STANDING.how}</p>
+            {result.paidSoFar !== undefined && <p className="text-base leading-7 text-muted">{PAYMENTS.howPayments}</p>}
             <p className="text-sm text-muted">{STANDING.ratesLoaded(formatDate(lastRateChangeDate()))}</p>
           </section>
         </div>

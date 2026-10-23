@@ -5,12 +5,19 @@ import type { Tone } from "./tones";
 // F2: WhatsApp text and the "If they don't reply" plan. Built only from approved fact strings,
 // so every digit passes checkEmail. Nothing is scheduled, stored or sent by the app.
 
-/** Short plain-text message for WhatsApp: the same facts as the email, no new numbers. */
+/**
+ * Short plain-text message for WhatsApp: the same facts as the email, no new numbers. Pass the
+ * tone's facts (factsForTone): a gentle check-in leaves interest out here too.
+ */
 export function whatsappText(facts: Facts): string {
   const f = facts.strings;
+  const noInterest = facts.avoid?.includes("interest") ?? false;
   return [
     `Hi ${f.clientName} team, a quick reminder about invoice ${f.invoiceNumber} dated ${f.invoiceDate} for ${f.amount}.`,
-    `It was due by ${f.lastPayableDate} and is now ${f.daysOverdue} overdue. Under Section 16 of the MSMED Act, 2006, interest of ${f.interest} may be owed so far, so the total now due is ${f.totalDue}.`,
+    ...(f.paymentsLine ? [f.paymentsLine] : []),
+    noInterest
+      ? `It was due by ${f.lastPayableDate} and is now ${f.daysOverdue} overdue.`
+      : `It was due by ${f.lastPayableDate} and is now ${f.daysOverdue} overdue. Under Section 16 of the MSMED Act, 2006, interest of ${f.interest} may be owed so far, so the total now due is ${f.totalDue}.`,
     `Could you share the expected payment date? Thank you.`,
     `[Your name]`,
   ].join("\n\n");

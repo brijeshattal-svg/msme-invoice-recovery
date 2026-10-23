@@ -1,5 +1,5 @@
 import type { ConfidenceKey, ExtractedInvoice } from "./ai/schemas";
-import { COPY } from "./copy";
+import { COPY, PAYMENTS } from "./copy";
 import { isValidISODate } from "./engine/dates";
 import type { EngineInput } from "./engine";
 import type { Tone } from "./email/tones";
@@ -23,8 +23,15 @@ export type FormValues = {
   hasAgreement: boolean;
   agreementDays: string;
   acceptanceDate: string;
+  /** Part payments received so far, as typed. Absent or empty = nothing paid. */
+  payments?: PaymentRow[];
 };
 export type FieldKey = keyof FormValues;
+/** One part payment as typed in the form; `id` is only a React key. */
+export type PaymentRow = { id: string; date: string; amount: string; tds: string };
+export type PaymentField = "date" | "amount" | "tds";
+/** Most payments one invoice can list; the server enforces the same. */
+export const MAX_PAYMENTS = 20;
 
 export type DraftState = {
   status: "idle" | "loading" | "ready";
@@ -92,6 +99,10 @@ export type Action =
   | { type: "extracted"; data: ExtractedInvoice }
   | { type: "manual" }
   | { type: "edit"; field: FieldKey; value: string | boolean }
+  | { type: "addPayment"; id: string }
+  | { type: "editPayment"; id: string; field: PaymentField; value: string }
+  | { type: "removePayment"; id: string }
+  | { type: "clearPayments" }
   | { type: "eligibility"; field: keyof Eligibility; value: string }
   | { type: "go"; step: Step }
   | { type: "setTone"; tone: Tone }
@@ -161,6 +172,20 @@ export function reducer(s: State, a: Action): State {
       const currency = a.field === "amount" && s.currency !== null && s.currency !== "INR" ? "INR" : s.currency;
       return { ...s, form, flagged, read, acceptanceEdited, currency };
     }
+    case "addPayment": {
+      const rows = s.form.payments ?? [];
+      if (rows.length >= MAX_PAYMENTS) return s;
+      return { ...s, form: { ...s.form, payments: [...rows, { id: a.id, date: "", amount: "", tds: "" }] } };
+    }
+    case "editPayment":
+      return {
+        ...s,
+        form: { ...s.form, payments: (s.form.payments ?? []).map((p) => (p.id === a.id ? { ...p, [a.field]: a.value } : p)) },
+      };
+    case "removePayment":
+      return { ...s, form: { ...s.form, payments: (s.form.payments ?? []).filter((p) => p.id !== a.id) } };
+    case "clearPayments":
+      return { ...s, form: { ...s.form, payments: [] } };
     case "eligibility":
       return { ...s, eligibility: { ...s.eligibility, [a.field]: a.value } as Eligibility };
     case "go":
@@ -211,7 +236,37 @@ export function validateForm(f: FormValues, today: string, currency: string | nu
   }
   if (!isValidISODate(f.acceptanceDate)) e.acceptanceDate = "Enter a valid acceptance date.";
   else if (f.acceptanceDate > today) e.acceptanceDate = "The acceptance date can't be in the future.";
+  const pay = validatePayments(f, today);
+  if (pay) e.payments = pay;
   return e;
+}
+
+const PAISE = /^\d+(\.\d{1,2})?$/;
+
+/**
+ * The first problem with the part payments, or null. Each needs a date between the invoice date
+ * and today, and a received amount and/or TDS in rupees (paise at most); together they must stay
+ * below the invoice amount (fully paid invoices are out of scope for now).
+ */
+export function validatePayments(f: FormValues, today: string): string | null {
+  const rows = f.payments ?? [];
+  if (rows.length > MAX_PAYMENTS) return PAYMENTS.errTooMany;
+  let total = 0;
+  for (const [i, p] of rows.entries()) {
+    const n = i + 1;
+    if (!isValidISODate(p.date)) return PAYMENTS.errDate(n);
+    if (isValidISODate(f.invoiceDate) && p.date < f.invoiceDate) return PAYMENTS.errBeforeInvoice(n);
+    if (p.date > today) return PAYMENTS.errFuture(n);
+    const amount = p.amount.trim();
+    const tds = p.tds.trim();
+    if ((amount !== "" && !PAISE.test(amount)) || (tds !== "" && !PAISE.test(tds))) return PAYMENTS.errAmount(n);
+    const credit = Number(amount || 0) + Number(tds || 0);
+    if (!(credit > 0)) return PAYMENTS.errZero(n);
+    total += credit;
+  }
+  const invoice = Number(f.amount);
+  if (rows.length > 0 && Number.isFinite(invoice) && invoice > 0 && Math.round(total * 100) >= Math.round(invoice * 100)) return PAYMENTS.errTooMuch;
+  return null;
 }
 
 /**

@@ -30,7 +30,8 @@ export type FactKey =
   | "totalDue"
   | "interestBasis"
   | "replyByDate"
-  | "waiverOffer";
+  | "waiverOffer"
+  | "paymentsLine";
 
 export type Facts = {
   strings: Record<FactKey, string>;
@@ -73,6 +74,7 @@ export const REQUIRED: FactKey[] = [
  */
 export function buildFacts(input: FactsInput, r: Overdue, asOf?: string): Facts {
   const days = r.daysOverdue;
+  const paymentsLine = paymentsSentence(r);
   return {
     strings: {
       clientName: cleanString(input.clientName) ?? "",
@@ -86,10 +88,24 @@ export function buildFacts(input: FactsInput, r: Overdue, asOf?: string): Facts 
       interestBasis: INTEREST_BASIS,
       replyByDate: asOf ? formatDate(addDays(asOf, REPLY_BY_DAYS)) : "",
       waiverOffer: "",
+      paymentsLine,
     },
-    required: REQUIRED,
+    required: paymentsLine ? [...REQUIRED, "paymentsLine"] : REQUIRED,
   };
 }
+
+/**
+ * When the client has paid part of the invoice: one fixed approved sentence (built here, never by
+ * the AI) saying what was received, including any TDS, and what is still unpaid. Empty otherwise.
+ */
+export function paymentsSentence(r: Pick<Overdue, "paidSoFar" | "tdsSoFar" | "unpaidAmount">): string {
+  if (r.paidSoFar === undefined || r.unpaidAmount === undefined) return "";
+  const tds = r.tdsSoFar ? `, including TDS of ${formatINR(r.tdsSoFar)}` : "";
+  return `We have received ${formatINR(r.paidSoFar)} so far${tds}, so ${formatINR(r.unpaidAmount)} of the invoice is still unpaid.`;
+}
+
+/** Added to the payments sentence in every tone that mentions interest (not the gentle check-in). */
+export const PAYMENTS_INTEREST_NOTE = "Interest is worked out only on what was still unpaid on each day.";
 
 export type ToneOptions = {
   /** The founder chose to offer waiving the interest if paid by the reply-by date. */
@@ -123,6 +139,7 @@ export function factsForTone(facts: Facts, tone: Tone, opts: ToneOptions = {}): 
     avoidWords.push("waive", "waived", "waiver", "waiving");
   }
   if (tone === "lastReminder" && strings.replyByDate) required.push("replyByDate");
+  if (tone !== "checkin" && strings.paymentsLine) strings.paymentsLine = `${strings.paymentsLine} ${PAYMENTS_INTEREST_NOTE}`;
 
   return { strings, required, avoid, avoidWords };
 }

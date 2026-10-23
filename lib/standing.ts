@@ -1,5 +1,5 @@
 import { ELIGIBILITY } from "./copy";
-import { daysBetween, isValidISODate, lastRateChangeDate, type EngineInput } from "./engine";
+import { daysBetween, isValidISODate, lastRateChangeDate, type EngineInput, type Payment } from "./engine";
 import type { FormValues } from "./wizard";
 
 /**
@@ -15,7 +15,13 @@ export function toEngineInput(f: FormValues, asOf: string): EngineInput {
     agreementDays: f.hasAgreement ? Number(f.agreementDays) : null,
     udyamDate: f.udyamDate,
     asOf,
+    ...(f.payments?.length ? { payments: paymentsFromForm(f) } : {}),
   };
+}
+
+/** Typed payment rows -> engine payments (blank TDS or amount = 0). Validated by validatePayments. */
+export function paymentsFromForm(f: FormValues): Payment[] {
+  return (f.payments ?? []).map((p) => ({ date: p.date, amount: Number(p.amount.trim() || 0), tds: Number(p.tds.trim() || 0) }));
 }
 
 // F1: optional "Does the law apply to you?" answers. Never block the journey; they only add

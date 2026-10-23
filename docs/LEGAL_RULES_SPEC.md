@@ -56,6 +56,27 @@ totalDue      = amount + totalInterest
 
 Month rows to display: `month`, `days`, `openingBalance`, `segments[] {bankRate, section16Rate, days}` (more than one segment when the rate changed inside the month), `interest`, `closingBalance`.
 
+## 4a. Part payments and TDS (added 23 Oct 2026)
+
+Optional input `payments: { date, amount, tds }[]`. Absent or empty = exactly section 4 (the golden vectors do not use it and are unchanged).
+
+```
+credit(p)        = p.amount + p.tds                 # TDS deducted by the buyer counts as paid  [DECISION]
+counted          = payments with date <= asOf       # later dates have not happened yet: ignored
+early            = credits dated before interestStart  -> reduce the amount interest starts on
+later            = credits dated on/after interestStart -> on that day, before that day's interest,
+                   reduce the balance interest runs on (base = month opening balance - payments so far this month)
+month interest   = round2( sum over days of base_d * 3r_d / 100 / 365 )
+closingBalance   = base_at_month_end + month interest
+totalDue         = amount - all counted credits + totalInterest   (== last closing balance)
+paidSoFar, tdsSoFar, unpaidAmount = amount - paidSoFar   (only present when a payment was counted)
+```
+
+- **[DECISION] Appropriation does not matter here.** Section 16 interest compounds with monthly rests, so interest is part of the balance and a payment reduces the same balance whether it is said to pay principal or interest first. The only judgement is *when*: from the day it is received.
+- **[DECISION] TDS counts as paid** ("as we understand it": the buyer deposits it against the supplier's PAN). Hedged in the UI.
+- **Out of scope for now:** invoices paid in full (interest on a paid-late invoice). The form and `/api/draft` reject payments that add up to the invoice amount or more; payments must be dated between the invoice date and today.
+- Emails: one fixed approved sentence (`paymentsLine`, built in code) states the amount received, any TDS, and the unpaid part; tones that mention interest add "Interest is worked out only on what was still unpaid on each day." It is required verbatim; any other payment figure fails the digit check.
+
 ## 5. RBI Bank Rate table (as given in the scope doc)
 
 | In force from | Bank rate | Section 16 rate (3x) |

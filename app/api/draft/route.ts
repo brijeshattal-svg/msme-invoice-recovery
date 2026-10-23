@@ -6,6 +6,7 @@ import { TONE_IDS } from "@/lib/email/tones";
 import { compute, isValidISODate } from "@/lib/engine";
 import { ipFrom, rateLimit } from "@/lib/ratelimit";
 import { todayIST } from "@/lib/today";
+import { MAX_PAYMENTS } from "@/lib/wizard";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -21,6 +22,7 @@ const Text = (max: number) =>
     .transform((s) => cleanString(s) ?? "")
     .pipe(z.string().min(1).max(max));
 const IsoDate = z.string().refine(isValidISODate);
+const Money = z.number().min(0).max(1e12);
 
 const DraftRequest = z.object({
   clientName: Text(200),
@@ -32,7 +34,22 @@ const DraftRequest = z.object({
   udyamDate: IsoDate,
   tone: z.enum(TONE_IDS as [string, ...string[]]),
   waiver: z.boolean().optional(),
+  payments: z
+    .array(z.object({ date: IsoDate, amount: Money, tds: Money }))
+    .max(MAX_PAYMENTS)
+    .optional(),
 });
+
+/** Same rules as validatePayments in the browser: dated invoice..today, each > 0, total < amount. */
+function paymentsOk(p: z.infer<typeof DraftRequest>, today: string): boolean {
+  const rows = p.payments ?? [];
+  let total = 0;
+  for (const r of rows) {
+    if (r.date < p.invoiceDate || r.date > today || !(r.amount + r.tds > 0)) return false;
+    total += r.amount + r.tds;
+  }
+  return Math.round(total * 100) < Math.round(p.amount * 100);
+}
 
 // CLAUDE.md rule 3: log status, timing and outcome only; never inputs or the email.
 function respond(started: number, status: number, body: unknown, extra = ""): Response {
@@ -58,6 +75,7 @@ export async function POST(req: Request) {
   const parsed = DraftRequest.safeParse(json);
   if (!parsed.success) return respond(started, 400, { error: "invalid_input" });
   const p = parsed.data;
+  if (!paymentsOk(p, todayIST())) return respond(started, 400, { error: "invalid_input" });
 
   // The server re-computes from the inputs; figures from the browser are never trusted.
   const result = compute({
@@ -67,6 +85,7 @@ export async function POST(req: Request) {
     agreementDays: p.agreementDays,
     udyamDate: p.udyamDate,
     asOf: todayIST(),
+    ...(p.payments?.length ? { payments: p.payments } : {}),
   });
   if (result.status !== "overdue") return respond(started, 409, { error: "not_overdue" });
 

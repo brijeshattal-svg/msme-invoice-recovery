@@ -14,6 +14,8 @@ export function buildTemplate(facts: Facts, tone: Tone): Email {
   const f = facts.strings;
   // The founder's optional waiver offer: one fixed approved sentence, before the closing request.
   const w = f.waiverOffer ? [f.waiverOffer] : [];
+  // Part payments: one fixed approved sentence, right after the invoice facts.
+  const p = f.paymentsLine ? [f.paymentsLine] : [];
 
   if (tone === "checkin") {
     return {
@@ -22,6 +24,7 @@ export function buildTemplate(facts: Facts, tone: Tone): Email {
         `Hi ${f.clientName} team,`,
         `A quick note that may be useful on your side: ${HEADS_UP}`,
         `I'm checking in on invoice ${f.invoiceNumber} dated ${f.invoiceDate} for ${f.amount}, which was due by ${f.lastPayableDate} and is now ${f.daysOverdue} overdue.`,
+        ...p,
         `Could you let me know this week when we can expect the payment, and whether anything is holding it up on your side? If something is needed from us, I'll send it right away.`,
         `Thank you, and thanks for working with us.`,
         SIGN_OFF,
@@ -36,6 +39,7 @@ export function buildTemplate(facts: Facts, tone: Tone): Email {
         `Hi ${f.clientName} team,`,
         `Thank you for the work we've done together. I suspect this one has simply slipped through, so here is a quick reminder, with one thing that may help on your side: ${HEADS_UP}`,
         `Our invoice ${f.invoiceNumber} dated ${f.invoiceDate} for ${f.amount} was due by ${f.lastPayableDate} and is now ${f.daysOverdue} overdue. ${f.interestBasis} Interest so far comes to ${f.interest}, which makes the total now due ${f.totalDue}.`,
+        ...p,
         ...w,
         `Could you let me know this week when we can expect the payment? Even a rough date would help us plan.`,
         `Thanks again, and looking forward to the next piece of work together.`,
@@ -60,6 +64,7 @@ export function buildTemplate(facts: Facts, tone: Tone): Email {
           `Total now due: ${f.totalDue}`,
         ].join("\n"),
         f.interestBasis,
+        ...p,
         ...w,
         `Please confirm (a) the current status of this invoice and (b) the scheduled payment date by the end of this week.`,
         `Regards,`,
@@ -76,6 +81,7 @@ export function buildTemplate(facts: Facts, tone: Tone): Email {
         `Dear ${f.clientName} team,`,
         `I've written about this invoice before and haven't yet heard back, so this is a last friendly reminder. First, a point that may matter for you: ${HEADS_UP}`,
         `Invoice ${f.invoiceNumber} dated ${f.invoiceDate} for ${f.amount} was due by ${f.lastPayableDate} and is now ${f.daysOverdue} overdue. ${f.interestBasis} Interest so far is ${f.interest}, and the total now due is ${f.totalDue}.`,
+        ...p,
         ...w,
         `We'd much rather settle this directly with you and keep working together. Could you arrange payment, or confirm a payment date, ${replyBy}?`,
         `Thank you,`,
@@ -91,6 +97,7 @@ export function buildTemplate(facts: Facts, tone: Tone): Email {
         `Hi ${f.clientName} team,`,
         `A quick heads-up that may be useful on your side: ${HEADS_UP}`,
         `Our invoice ${f.invoiceNumber} dated ${f.invoiceDate} for ${f.amount} was due for payment by ${f.lastPayableDate} and is now ${f.daysOverdue} overdue. ${f.interestBasis} Interest so far comes to ${f.interest}, so the total now due is ${f.totalDue}.`,
+        ...p,
         ...w,
         `Could you let us know when we can expect the payment? A reply this week would really help us plan.`,
         `Thank you, and thanks for working with us.`,
@@ -106,6 +113,7 @@ export function buildTemplate(facts: Facts, tone: Tone): Email {
         `Dear ${f.clientName} team,`,
         `I'm following up on my earlier reminder. Before the details, one point that may matter for you: ${HEADS_UP}`,
         `Invoice ${f.invoiceNumber} dated ${f.invoiceDate} for ${f.amount} was due by ${f.lastPayableDate}. It is now ${f.daysOverdue} overdue. ${f.interestBasis} Interest so far is ${f.interest}, and the total now due is ${f.totalDue}.`,
+        ...p,
         ...w,
         `Please confirm a payment date by the end of this week.`,
         `Regards,`,
@@ -129,6 +137,7 @@ export function buildTemplate(facts: Facts, tone: Tone): Email {
         `Total now due: ${f.totalDue}`,
       ].join("\n"),
       f.interestBasis,
+      ...p,
       ...w,
       `We would be grateful if you could arrange payment, or confirm the expected payment date, by the end of next week.`,
       `Yours faithfully,`,

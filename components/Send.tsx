@@ -115,7 +115,7 @@ export function SendScreen({ draft, facts, tone, today, factsOn, onEdit, onUseSt
 
   async function onWhatsApp() {
     if (!facts) return;
-    setToast((await copyText(whatsappText(facts))) ? EMAIL.copiedWhatsApp : EMAIL.copyFailed);
+    setToast((await copyText(whatsappText(factsForTone(facts, tone ?? "friendly")))) ? EMAIL.copiedWhatsApp : EMAIL.copyFailed);
   }
 
   // Later reminders: the template for that tone, with figures worked out for the send date.

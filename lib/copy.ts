@@ -555,3 +555,35 @@ export const PRIVACY = {
   ],
   back: "Back to Quick Check",
 } as const;
+
+// Part payments on the confirm screen (spec section 4a). TDS wording is hedged.
+export const PAYMENTS = {
+  title: "Paid so far",
+  question: "Has the client paid any of this invoice?",
+  options: [
+    { value: "no", label: "No" },
+    { value: "yes", label: "Yes, part of it" },
+  ],
+  help: "Enter each payment that reached you, and any TDS the client deducted from it. As we understand it, TDS the client deposits against your PAN counts as paid, so it reduces what is owed.",
+  row: (n: number) => `Payment ${n}`,
+  dateLabel: "Date received",
+  amountLabel: "Amount received (₹)",
+  tdsLabel: "TDS deducted (₹, optional)",
+  remove: "Remove",
+  add: "+ Add another payment",
+  fullNote:
+    "If the client has paid the whole invoice, this check isn't for it yet: it works out interest on invoices that are still at least partly unpaid.",
+  errDate: (n: number) => `Payment ${n}: enter the date it was received.`,
+  errBeforeInvoice: (n: number) => `Payment ${n}: the date can't be before the invoice date.`,
+  errFuture: (n: number) => `Payment ${n}: the date can't be in the future.`,
+  errAmount: (n: number) => `Payment ${n}: use digits only, with at most 2 decimal places (paise).`,
+  errZero: (n: number) => `Payment ${n}: enter the amount received or the TDS deducted.`,
+  errTooMuch: "The payments add up to the whole invoice or more. This check is for invoices that are still partly unpaid.",
+  errTooMany: "You can enter up to 20 payments.",
+  // Standing screen
+  receivedLabel: "Received so far",
+  tdsNote: (tds: string) => `including TDS of ${tds}`,
+  unpaidLabel: "Still unpaid (before interest)",
+  paidColumn: "Paid",
+  howPayments: "A payment reduces the amount that interest runs on from the day it was received. TDS counts as received.",
+} as const;

@@ -15,9 +15,15 @@ import { COPY, PRIVACY } from "@/lib/copy";
 import { factsFromForm, getDraft, templateDraft } from "@/lib/email/flow";
 import { compute } from "@/lib/engine";
 import { compressImage, UploadError } from "@/lib/image";
-import { eligibilityNotes, toEngineInput } from "@/lib/standing";
+import { eligibilityNotes, paymentsFromForm, toEngineInput } from "@/lib/standing";
 import { todayIST } from "@/lib/today";
-import { initialState, reducer, sampleExtraction } from "@/lib/wizard";
+import { initialState, reducer, sampleExtraction, type FormValues } from "@/lib/wizard";
+
+/** Invoice amount less part payments (cash + TDS), in rupees, rounded to paise. */
+function unpaidOf(f: FormValues): number {
+  const paid = paymentsFromForm(f).reduce((sum, p) => sum + p.amount + p.tds, 0);
+  return Math.round((Number(f.amount) - paid) * 100) / 100;
+}
 
 export default function Home() {
   // The whole journey lives in memory only: no localStorage, no cookies (CLAUDE.md rule 3).
@@ -36,7 +42,9 @@ export default function Home() {
       id: newId(),
       client: f.clientName.trim(),
       number: f.invoiceNumber.trim(),
-      amount: Number(f.amount),
+      // Part payments: Priorities tracks what is still unpaid (its interest estimate then runs on
+      // that part only, so it can only understate, never overstate, what may be owed).
+      amount: unpaidOf(f),
       invoiceDate: f.invoiceDate,
       acceptanceDate: f.acceptanceDate,
       agreementDays: f.hasAgreement ? Number(f.agreementDays) : null,
