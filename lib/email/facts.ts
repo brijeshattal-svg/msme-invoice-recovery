@@ -139,6 +139,10 @@ export function factsForTone(facts: Facts, tone: Tone, opts: ToneOptions = {}): 
     avoidWords.push("waive", "waived", "waiver", "waiving");
   }
   if (tone === "lastReminder" && strings.replyByDate) required.push("replyByDate");
+  // Seen live: drafts in friendly tones added "reply by <date>". The date is only approved where
+  // the founder chose a deadline (last reminder, or the waiver's date); elsewhere it is withdrawn,
+  // so a date written anyway fails the digit check.
+  if (tone !== "lastReminder" && !strings.waiverOffer) strings.replyByDate = "";
   if (tone !== "checkin" && strings.paymentsLine) strings.paymentsLine = `${strings.paymentsLine} ${PAYMENTS_INTEREST_NOTE}`;
 
   return { strings, required, avoid, avoidWords };

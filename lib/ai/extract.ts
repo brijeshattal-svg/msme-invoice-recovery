@@ -25,9 +25,12 @@ Rules:
 - paymentTermsDays is a number only if the invoice states a number of days (for example "Net 30" -> 30); otherwise null. paymentTermsText is the terms line copied verbatim, or null.
 - If a value is not clearly legible or not present, use null and set its confidence to "low". Never guess.
 - confidence is "high" only when the value is clearly printed and you are sure of it.
+- invoiceNumber is the number only, without labels or symbols such as "#" or "No.".
+- amountTotal stays the grand total of the invoice. If the invoice itself shows an amount already paid against it (for example "Payment Made", "Advance received", "Less: advance"), put that amount in amountPaid and its date, if printed, in amountPaidDate (ISO); otherwise both are null.
+- A final invoice for work or goods is an invoice. Proforma invoices, quotations, estimates, purchase orders, credit notes, debit notes, receipts and delivery challans are NOT invoices: set isInvoice to false for them.
 - If the file is not an invoice, set isInvoice to false and every other field to null with "low" confidence.
 Return exactly this JSON shape, with every key present:
-{"isInvoice": boolean, "clientName": string|null, "invoiceNumber": string|null, "invoiceDate": string|null, "amountTotal": number|null, "currency": string|null, "paymentTermsDays": number|null, "paymentTermsText": string|null, "confidence": {"clientName": "high"|"low", "invoiceNumber": "high"|"low", "invoiceDate": "high"|"low", "amountTotal": "high"|"low", "paymentTermsDays": "high"|"low"}}`;
+{"isInvoice": boolean, "clientName": string|null, "invoiceNumber": string|null, "invoiceDate": string|null, "amountTotal": number|null, "currency": string|null, "paymentTermsDays": number|null, "paymentTermsText": string|null, "amountPaid": number|null, "amountPaidDate": string|null, "confidence": {"clientName": "high"|"low", "invoiceNumber": "high"|"low", "invoiceDate": "high"|"low", "amountTotal": "high"|"low", "paymentTermsDays": "high"|"low"}}`;
 
 const USER_PROMPT = "Extract the invoice fields from the attached file. Return only the JSON object.";
 

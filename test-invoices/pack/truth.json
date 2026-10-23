@@ -1,0 +1,105 @@
+[
+  {
+    "file": "01-zoho-style-ankur-brand-INV-000142.pdf",
+    "isInvoice": true,
+    "clientName": "Meridian Foods Pvt Ltd",
+    "invoiceNumber": "INV-000142",
+    "invoiceDate": "2026-08-01",
+    "amountTotal": 354000,
+    "currency": "INR",
+    "paymentTermsDays": 30
+  },
+  {
+    "file": "02-razorpay-style-tidewater-TCC-031.pdf",
+    "isInvoice": true,
+    "clientName": "Brightpath Edtech Pvt Ltd",
+    "invoiceNumber": "TCC/26-27/031",
+    "invoiceDate": "2026-08-12",
+    "amountTotal": 224200,
+    "currency": "INR",
+    "paymentTermsDays": null
+  },
+  {
+    "file": "03-tally-style-kaveri-KT-0451.pdf",
+    "isInvoice": true,
+    "clientName": "Sunrise Polymers Ltd",
+    "invoiceNumber": "KT/0451/26-27",
+    "invoiceDate": "2026-09-05",
+    "amountTotal": 159300,
+    "currency": "INR",
+    "paymentTermsDays": 45
+  },
+  {
+    "file": "04-simple-bill-rang-photography-RP-27.pdf",
+    "isInvoice": true,
+    "clientName": "Lotus Events & Weddings",
+    "invoiceNumber": "RP-27",
+    "invoiceDate": "2026-08-28",
+    "amountTotal": 45500,
+    "currency": "INR",
+    "paymentTermsDays": 15
+  },
+  {
+    "file": "05-phone-photo-shree-ganesh-SGE-122.jpg",
+    "isInvoice": true,
+    "clientName": "Orchid Residency Hotels Pvt Ltd",
+    "invoiceNumber": "SGE/122",
+    "invoiceDate": "2026-08-10",
+    "amountTotal": 71272,
+    "currency": "INR",
+    "paymentTermsDays": null
+  },
+  {
+    "file": "06-two-page-inkwell-IWC-118.pdf",
+    "isInvoice": true,
+    "clientName": "Fintrail Payments Pvt Ltd",
+    "invoiceNumber": "IWC-2026-118",
+    "invoiceDate": "2026-07-20",
+    "amountTotal": 169920,
+    "currency": "INR",
+    "paymentTermsDays": 45
+  },
+  {
+    "file": "07-export-usd-bluefin-BCL-EXP-0093.pdf",
+    "isInvoice": true,
+    "clientName": "Northshore Analytics Inc.",
+    "invoiceNumber": "BCL-EXP-0093",
+    "invoiceDate": "2026-08-18",
+    "amountTotal": 6300,
+    "currency": "USD",
+    "paymentTermsDays": 30
+  },
+  {
+    "file": "08-advance-paid-monsoon-MMW-064.pdf",
+    "isInvoice": true,
+    "clientName": "Greenleaf Organics Pvt Ltd",
+    "invoiceNumber": "MMW/INV/2026/064",
+    "invoiceDate": "2026-08-05",
+    "amountTotal": 236000,
+    "currency": "INR",
+    "paymentTermsDays": null,
+    "note": "Advance ₹50,000 paid 25 Jul 2026; balance due ₹1,86,000. The grand total is ₹2,36,000; the founder should enter the advance as a part payment."
+  },
+  {
+    "file": "09-proforma-quillstone-QTC-PI-045.pdf",
+    "isInvoice": false,
+    "clientName": "Eastern Freight Lines Pvt Ltd",
+    "invoiceNumber": "QTC/PI/2026/045",
+    "invoiceDate": "2026-09-02",
+    "amountTotal": 118000,
+    "currency": "INR",
+    "paymentTermsDays": null,
+    "note": "A proforma is a request for advance payment, not an invoice for accepted work: it should not be chased as overdue."
+  },
+  {
+    "file": "10-credit-note-kaveri-KT-CN-012.pdf",
+    "isInvoice": false,
+    "clientName": "Sunrise Polymers Ltd",
+    "invoiceNumber": "KT/CN/012/26-27",
+    "invoiceDate": "2026-09-20",
+    "amountTotal": 17700,
+    "currency": "INR",
+    "paymentTermsDays": null,
+    "note": "A credit note reduces what the client owes; it is not an invoice to chase."
+  }
+]

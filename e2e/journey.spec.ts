@@ -154,6 +154,37 @@ test.describe("part payments and TDS", () => {
     );
   });
 
+  test("an advance printed on the invoice is pre-filled, so interest is never claimed on it", async ({ page }) => {
+    await setup(page, { draft: "down" });
+    await page.route("**/api/extract", (r) =>
+      r.fulfill({
+        json: {
+          data: {
+            isInvoice: true,
+            clientName: "Greenleaf Organics Pvt Ltd",
+            invoiceNumber: "MMW/INV/2026/064",
+            invoiceDate: "2026-08-05",
+            amountTotal: 236000,
+            currency: "INR",
+            paymentTermsDays: null,
+            paymentTermsText: "Due on Receipt",
+            amountPaid: 50000,
+            amountPaidDate: "2026-07-25",
+            confidence: { clientName: "high", invoiceNumber: "high", invoiceDate: "high", amountTotal: "high", paymentTermsDays: "low" },
+          },
+        },
+      }),
+    );
+    await page.goto("/");
+    await page.getByRole("button", { name: /Try the sample/ }).click();
+    await expect(page.getByText(/Your invoice shows ₹50,000\.00 already paid/)).toBeVisible();
+    await expect(page.getByLabel("Date received")).toHaveValue("2026-07-25");
+    await page.getByLabel("Udyam registration date").fill("2024-01-15");
+    await page.getByRole("button", { name: "Check what I may be owed" }).click();
+    await expect(page.getByText("Received so far")).toBeVisible();
+    await expect(page.getByText("₹1,86,000.00").first()).toBeVisible();
+  });
+
   test("payments that cover the whole invoice are refused with a clear message", async ({ page }) => {
     await setup(page);
     await enterByHand(page, "1000");

@@ -40,12 +40,12 @@ const DraftRequest = z.object({
     .optional(),
 });
 
-/** Same rules as validatePayments in the browser: dated invoice..today, each > 0, total < amount. */
+/** Same rules as validatePayments in the browser: dated up to today, each > 0, total < amount. */
 function paymentsOk(p: z.infer<typeof DraftRequest>, today: string): boolean {
   const rows = p.payments ?? [];
   let total = 0;
   for (const r of rows) {
-    if (r.date < p.invoiceDate || r.date > today || !(r.amount + r.tds > 0)) return false;
+    if (r.date > today || !(r.amount + r.tds > 0)) return false;
     total += r.amount + r.tds;
   }
   return Math.round(total * 100) < Math.round(p.amount * 100);

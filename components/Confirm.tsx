@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { COPY, ELIGIBILITY, PAYMENTS } from "@/lib/copy";
 import { eligibilityNotes } from "@/lib/standing";
+import { formatINR } from "@/lib/format";
 import { todayIST } from "@/lib/today";
 import { MAX_PAYMENTS, validateForm, type Action, type FieldKey, type FormErrors, type PaymentField, type State } from "@/lib/wizard";
 import { Banner } from "./ui/Banner";
@@ -191,6 +192,11 @@ function Payments({ state, dispatch, today, error }: { state: State; dispatch: (
           onChange={(v) => dispatch(v === "yes" ? { type: "addPayment", id: newRowId() } : { type: "clearPayments" })}
         />
         {on && <p className="text-sm text-muted">{PAYMENTS.help}</p>}
+        {on && state.paidHint !== null && (
+          <Banner tone="warn" size="sm" role="note">
+            <p>{PAYMENTS.fromInvoice(formatINR(state.paidHint))}</p>
+          </Banner>
+        )}
       </div>
       {on && (
         <div id="f-payments" tabIndex={-1} className="flex flex-col outline-none" aria-describedby={error ? "f-payments-err" : undefined}>
@@ -204,7 +210,7 @@ function Payments({ state, dispatch, today, error }: { state: State; dispatch: (
                 </Button>
               </div>
               <Field id={`f-pay-${p.id}-date`} label={PAYMENTS.dateLabel}>
-                {(cls, d) => <input id={`f-pay-${p.id}-date`} type="date" min={state.form.invoiceDate || undefined} max={today} className={`${cls} num`} aria-describedby={d} value={p.date} onChange={set(p.id, "date")} />}
+                {(cls, d) => <input id={`f-pay-${p.id}-date`} type="date" max={today} className={`${cls} num`} aria-describedby={d} value={p.date} onChange={set(p.id, "date")} />}
               </Field>
               <Field id={`f-pay-${p.id}-amount`} label={PAYMENTS.amountLabel}>
                 {(cls, d) => <input id={`f-pay-${p.id}-amount`} type="number" inputMode="decimal" min="0" step="0.01" className={`${cls} num`} aria-describedby={d} value={p.amount} onChange={set(p.id, "amount")} />}

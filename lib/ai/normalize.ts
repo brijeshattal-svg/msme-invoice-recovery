@@ -30,6 +30,8 @@ export function normalizeExtraction(raw: ExtractedInvoice): ExtractedInvoice {
       currency: null,
       paymentTermsDays: null,
       paymentTermsText: null,
+      amountPaid: null,
+      amountPaidDate: null,
       confidence: {
         clientName: "low",
         invoiceNumber: "low",
@@ -45,7 +47,8 @@ export function normalizeExtraction(raw: ExtractedInvoice): ExtractedInvoice {
   const clientName = cleanString(raw.clientName);
   if (clientName === null) confidence.clientName = "low";
 
-  const invoiceNumber = cleanString(raw.invoiceNumber);
+  // Seen live: "#TCC/26-27/031". A label in front would end up in the email.
+  const invoiceNumber = cleanString(raw.invoiceNumber?.replace(/^\s*(?:#|no\s*[.:])\s*/i, "") ?? null);
   if (invoiceNumber === null) confidence.invoiceNumber = "low";
 
   let invoiceDate = cleanString(raw.invoiceDate);
@@ -68,6 +71,13 @@ export function normalizeExtraction(raw: ExtractedInvoice): ExtractedInvoice {
 
   const currency = cleanString(raw.currency)?.toUpperCase() ?? null;
 
+  // A payment the invoice shows as already made: only a positive amount below the total counts.
+  let amountPaid = raw.amountPaid ?? null;
+  if (amountPaid !== null && !(Number.isFinite(amountPaid) && amountPaid > 0 && (amountTotal === null || amountPaid < amountTotal))) amountPaid = null;
+  if (amountPaid !== null) amountPaid = Math.round(amountPaid * 100) / 100;
+  let amountPaidDate = cleanString(raw.amountPaidDate ?? null);
+  if (amountPaid === null || (amountPaidDate !== null && !isValidISODate(amountPaidDate))) amountPaidDate = null;
+
   return {
     isInvoice: true,
     clientName,
@@ -77,6 +87,8 @@ export function normalizeExtraction(raw: ExtractedInvoice): ExtractedInvoice {
     currency,
     paymentTermsDays,
     paymentTermsText: cleanString(raw.paymentTermsText),
+    amountPaid,
+    amountPaidDate,
     confidence,
   };
 }

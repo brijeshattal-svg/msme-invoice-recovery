@@ -12,6 +12,9 @@ export const ExtractedInvoiceSchema = z.object({
   currency: z.string().nullable(),
   paymentTermsDays: z.number().nullable(),
   paymentTermsText: z.string().nullable(),
+  /** An advance or payment the invoice itself shows as already received (e.g. "Payment Made"). */
+  amountPaid: z.number().nullable().optional(),
+  amountPaidDate: z.string().nullable().optional(), // ISO YYYY-MM-DD
   confidence: z.object({
     clientName: Confidence,
     invoiceNumber: Confidence,

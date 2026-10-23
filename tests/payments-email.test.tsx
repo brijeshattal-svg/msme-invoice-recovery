@@ -106,11 +106,11 @@ describe("the form: entering part payments", () => {
     expect(reducer(s, { type: "clearPayments" }).form.payments).toEqual([]);
   });
 
-  it("validation: date between invoice date and today, digits with paise, something paid, total under the invoice", () => {
+  it("validation: a date up to today (advances may predate the invoice), digits with paise, something paid, total under the invoice", () => {
     const v = (payments: FormValues["payments"]) => validatePayments({ ...FORM, payments }, TODAY);
     expect(v([row("a", "2026-09-16", "90000", "10000")])).toBeNull();
     expect(v([row("a", "", "100")])).toBe(PAYMENTS.errDate(1));
-    expect(v([row("a", "2026-08-01", "100")])).toBe(PAYMENTS.errBeforeInvoice(1));
+    expect(v([row("a", "2026-07-25", "50000")])).toBeNull(); // advance paid before the invoice date
     expect(v([row("a", "2026-10-23", "100")])).toBe(PAYMENTS.errFuture(1));
     expect(v([row("a", "2026-09-16", "1,000")])).toBe(PAYMENTS.errAmount(1));
     expect(v([row("a", "2026-09-16", "10.005")])).toBe(PAYMENTS.errAmount(1));
@@ -192,11 +192,10 @@ describe("/api/draft with part payments", () => {
     expect(((await res.json()) as { source: string }).source).toBe("ai");
   });
 
-  it("rejects payments that add up to the whole invoice, are dated in the future or before the invoice, or are zero", async () => {
+  it("rejects payments that add up to the whole invoice, are dated in the future, or are zero", async () => {
     for (const payments of [
       [{ date: addDays(today, -20), amount: 236000, tds: 0 }],
       [{ date: addDays(today, 1), amount: 1000, tds: 0 }],
-      [{ date: addDays(invoiceDate, -1), amount: 1000, tds: 0 }],
       [{ date: addDays(today, -20), amount: 0, tds: 0 }],
       [{ date: addDays(today, -20), amount: -5, tds: 0 }],
     ]) {
@@ -204,5 +203,10 @@ describe("/api/draft with part payments", () => {
       expect(res.status, JSON.stringify(payments)).toBe(400);
     }
     expect(generateContent).not.toHaveBeenCalled();
+  });
+
+  it("accepts an advance dated before the invoice", async () => {
+    const res = await post({ ...body, payments: [{ date: addDays(invoiceDate, -10), amount: 50000, tds: 0 }] });
+    expect(res.status).toBe(200);
   });
 });

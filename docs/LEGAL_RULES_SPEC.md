@@ -74,7 +74,7 @@ paidSoFar, tdsSoFar, unpaidAmount = amount - paidSoFar   (only present when a pa
 
 - **[DECISION] Appropriation does not matter here.** Section 16 interest compounds with monthly rests, so interest is part of the balance and a payment reduces the same balance whether it is said to pay principal or interest first. The only judgement is *when*: from the day it is received.
 - **[DECISION] TDS counts as paid** ("as we understand it": the buyer deposits it against the supplier's PAN). Hedged in the UI.
-- **Out of scope for now:** invoices paid in full (interest on a paid-late invoice). The form and `/api/draft` reject payments that add up to the invoice amount or more; payments must be dated between the invoice date and today.
+- **Out of scope for now:** invoices paid in full (interest on a paid-late invoice). The form and `/api/draft` reject payments that add up to the invoice amount or more; payments must be dated on or before today (an advance may predate the invoice).
 - Emails: one fixed approved sentence (`paymentsLine`, built in code) states the amount received, any TDS, and the unpaid part; tones that mention interest add "Interest is worked out only on what was still unpaid on each day." It is required verbatim; any other payment figure fails the digit check.
 
 ## 5. RBI Bank Rate table (as given in the scope doc)

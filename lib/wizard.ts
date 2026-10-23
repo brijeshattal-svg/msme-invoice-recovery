@@ -62,6 +62,8 @@ export type State = {
   read: Partial<Record<FieldKey, true>>;
   /** Optional answers to "Does the law apply to you?"; they only add hedged notes. */
   eligibility: Eligibility;
+  /** A payment the invoice itself shows as made, pre-filled under "Paid so far" for the founder to check. */
+  paidHint: number | null;
 };
 
 const emptyForm: FormValues = {
@@ -91,6 +93,7 @@ export const initialState: State = {
   acceptanceEdited: false,
   read: {},
   eligibility: emptyEligibility,
+  paidHint: null,
 };
 
 export type Action =
@@ -120,7 +123,7 @@ const MAP: [ConfidenceKey, FieldKey][] = [
 ];
 
 /** Extraction result -> prefilled form + flags for the fields to double-check. */
-export function fromExtraction(d: ExtractedInvoice): Pick<State, "form" | "flagged" | "termsHint" | "currency"> {
+export function fromExtraction(d: ExtractedInvoice): Pick<State, "form" | "flagged" | "termsHint" | "currency" | "paidHint"> {
   const form: FormValues = {
     ...emptyForm,
     clientName: d.clientName ?? "",
@@ -128,6 +131,8 @@ export function fromExtraction(d: ExtractedInvoice): Pick<State, "form" | "flagg
     invoiceDate: d.invoiceDate ?? "",
     amount: d.amountTotal === null ? "" : String(d.amountTotal),
     acceptanceDate: d.invoiceDate ?? "", // defaults to the invoice date
+    // The invoice shows money already received: pre-fill it so interest is never claimed on it.
+    ...(d.amountPaid ? { payments: [{ id: "from-invoice", date: d.amountPaidDate ?? "", amount: String(d.amountPaid), tds: "" }] } : {}),
   };
   const values: Record<ConfidenceKey, unknown> = {
     clientName: d.clientName,
@@ -142,7 +147,7 @@ export function fromExtraction(d: ExtractedInvoice): Pick<State, "form" | "flagg
     else if (d.confidence[ck] === "low") flagged[fk] = "check";
   }
   const termsHint = d.paymentTermsText ?? (d.paymentTermsDays !== null ? `Net ${d.paymentTermsDays}` : null);
-  return { form, flagged, termsHint, currency: d.currency };
+  return { form, flagged, termsHint, currency: d.currency, paidHint: d.amountPaid ?? null };
 }
 
 export function reducer(s: State, a: Action): State {
@@ -244,8 +249,8 @@ export function validateForm(f: FormValues, today: string, currency: string | nu
 const PAISE = /^\d+(\.\d{1,2})?$/;
 
 /**
- * The first problem with the part payments, or null. Each needs a date between the invoice date
- * and today, and a received amount and/or TDS in rupees (paise at most); together they must stay
+ * The first problem with the part payments, or null. Each needs a date on or before today (an
+ * advance may predate the invoice), and a received amount and/or TDS in rupees (paise at most); together they must stay
  * below the invoice amount (fully paid invoices are out of scope for now).
  */
 export function validatePayments(f: FormValues, today: string): string | null {
@@ -255,7 +260,7 @@ export function validatePayments(f: FormValues, today: string): string | null {
   for (const [i, p] of rows.entries()) {
     const n = i + 1;
     if (!isValidISODate(p.date)) return PAYMENTS.errDate(n);
-    if (isValidISODate(f.invoiceDate) && p.date < f.invoiceDate) return PAYMENTS.errBeforeInvoice(n);
+    // An advance is often paid before the invoice is raised, so earlier dates are allowed.
     if (p.date > today) return PAYMENTS.errFuture(n);
     const amount = p.amount.trim();
     const tds = p.tds.trim();

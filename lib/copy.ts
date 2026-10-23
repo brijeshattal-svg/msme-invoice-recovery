@@ -18,7 +18,8 @@ export const COPY = {
   disclaimer: "Not legal advice. Calculates and drafts; you decide what to send.",
   reading: "Reading your invoice... usually 10 to 20 seconds",
   slowReading: "Taking longer than usual. You can keep waiting, or enter the details by hand instead.",
-  noInvoice: "No invoice found in this file. Please try another.",
+  noInvoice:
+    "This doesn't look like an invoice to chase (for example a proforma, quotation or credit note). Upload the tax invoice itself, or enter the details by hand.",
   pdfTooLarge: "That PDF is too large. Try a photo of it or a smaller export.",
   imageTooLarge: "That photo is still too large after shrinking it. Try a smaller one.",
   unsupported: "Please upload a PDF, JPEG or PNG file.",
@@ -564,7 +565,9 @@ export const PAYMENTS = {
     { value: "no", label: "No" },
     { value: "yes", label: "Yes, part of it" },
   ],
-  help: "Enter each payment that reached you, and any TDS the client deducted from it. As we understand it, TDS the client deposits against your PAN counts as paid, so it reduces what is owed.",
+  fromInvoice: (amount: string) =>
+    `Your invoice shows ${amount} already paid, so we added it below. Check the amount and the date it reached you.`,
+  help: "Enter each payment that reached you, including any advance, and any TDS the client deducted from it. As we understand it, TDS the client deposits against your PAN counts as paid, so it reduces what is owed.",
   row: (n: number) => `Payment ${n}`,
   dateLabel: "Date received",
   amountLabel: "Amount received (₹)",
@@ -574,7 +577,6 @@ export const PAYMENTS = {
   fullNote:
     "If the client has paid the whole invoice, this check isn't for it yet: it works out interest on invoices that are still at least partly unpaid.",
   errDate: (n: number) => `Payment ${n}: enter the date it was received.`,
-  errBeforeInvoice: (n: number) => `Payment ${n}: the date can't be before the invoice date.`,
   errFuture: (n: number) => `Payment ${n}: the date can't be in the future.`,
   errAmount: (n: number) => `Payment ${n}: use digits only, with at most 2 decimal places (paise).`,
   errZero: (n: number) => `Payment ${n}: enter the amount received or the TDS deducted.`,
