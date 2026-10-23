@@ -31,6 +31,7 @@ const DraftRequest = z.object({
   agreementDays: z.number().int().min(0).max(365).nullable(),
   udyamDate: IsoDate,
   tone: z.enum(TONE_IDS as [string, ...string[]]),
+  waiver: z.boolean().optional(),
 });
 
 // CLAUDE.md rule 3: log status, timing and outcome only; never inputs or the email.
@@ -70,7 +71,7 @@ export async function POST(req: Request) {
   if (result.status !== "overdue") return respond(started, 409, { error: "not_overdue" });
 
   const tone = p.tone as (typeof TONE_IDS)[number];
-  const facts = factsForTone(buildFacts(p, result, todayIST()), tone);
+  const facts = factsForTone(buildFacts(p, result, todayIST()), tone, { waiver: p.waiver === true });
   const draft = await draftEmail(facts, tone);
   return respond(
     started,

@@ -31,7 +31,7 @@ const send = (draft: DraftState) =>
   text(renderToStaticMarkup(<SendScreen draft={draft} facts={facts} onEdit={noop} onChangeTone={noop} onBack={noop} />));
 
 describe("Tone screen", () => {
-  it("shows six cards in two groups with the exact one-line guidance, the selected state and the button", () => {
+  it("shows seven cards in two groups with the exact one-line guidance, the selected state and the button", () => {
     const html = renderToStaticMarkup(<ToneScreen tone="firm" onSelect={noop} onDraft={noop} onBack={noop} />);
     const t = text(html);
     expect(t).toContain("Friendly Good relationship, first gentle nudge.");
@@ -41,7 +41,8 @@ describe("Tone screen", () => {
     expect(t).toContain("Relationship-first Retainer or repeat clients");
     expect(t).toContain("Finance-team ready");
     expect(t).toContain("Last friendly reminder");
-    expect(html.match(/type="radio"/g)).toHaveLength(6);
+    expect(t).toContain("Gentle check-in");
+    expect(html.match(/type="radio"/g)).toHaveLength(7);
     expect(html.match(/checked=""/g)).toHaveLength(1);
     expect(html).toMatch(/value="firm"[^>]*checked=""|checked=""[^>]*value="firm"/);
   });

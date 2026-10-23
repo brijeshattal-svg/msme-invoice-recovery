@@ -19,6 +19,7 @@ export function whatsappText(facts: Facts): string {
 /** The next, slightly firmer tone after this one. The ladder ends at the last friendly reminder. */
 export const NEXT_TONE: Record<Tone, Tone> = {
   relationship: "friendly",
+  checkin: "friendly",
   friendly: "firm",
   firm: "lastReminder",
   finance: "formal",

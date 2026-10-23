@@ -2,12 +2,21 @@
 
 import { useEffect, useRef } from "react";
 import { EMAIL } from "@/lib/copy";
+import { REPLY_BY_DAYS } from "@/lib/email/facts";
 import { TONE_GROUPS, TONES, type Tone } from "@/lib/email/tones";
 import { Button } from "./ui/Button";
 
-type Props = { tone: Tone; onSelect: (t: Tone) => void; onDraft: () => void; onBack: () => void };
+type Props = {
+  tone: Tone;
+  onSelect: (t: Tone) => void;
+  onDraft: () => void;
+  onBack: () => void;
+  /** Optional interest-waiver offer (founder's choice). Omit onWaiver to hide the switch. */
+  waiver?: boolean;
+  onWaiver?: (on: boolean) => void;
+};
 
-export function ToneScreen({ tone, onSelect, onDraft, onBack }: Props) {
+export function ToneScreen({ tone, onSelect, onDraft, onBack, waiver = false, onWaiver }: Props) {
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => heading.current?.focus(), []);
 
@@ -38,6 +47,30 @@ export function ToneScreen({ tone, onSelect, onDraft, onBack }: Props) {
           </div>
         ))}
       </div>
+
+      {onWaiver && (
+        <div className="rounded-card border-[1.5px] border-line bg-surface px-6 py-5 shadow-card">
+          {tone === "checkin" ? (
+            <p className="text-[15px] text-muted">{EMAIL.waiverOff}</p>
+          ) : (
+            <label className="flex min-h-11 cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                checked={waiver}
+                onChange={(e) => onWaiver(e.target.checked)}
+                aria-describedby="waiver-help"
+                className="mt-1 h-5 w-5 shrink-0 accent-[var(--brand-700)]"
+              />
+              <span>
+                <span className="block font-semibold">{EMAIL.waiverLabel(REPLY_BY_DAYS)}</span>
+                <span id="waiver-help" className="mt-1 block text-[15px] text-muted">
+                  {EMAIL.waiverHelp}
+                </span>
+              </span>
+            </label>
+          )}
+        </div>
+      )}
 
       <div className="mt-2 flex flex-col items-center gap-1.5">
         <Button size="lg" onClick={onDraft} className="px-7">

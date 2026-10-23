@@ -70,7 +70,7 @@ export default function Home() {
   // Server draft -> re-checked in the browser -> template on any failure (never dead-ends).
   async function handleDraft() {
     dispatch({ type: "draftLoading" });
-    const drafted = await getDraft(state.form, state.tone, todayIST(), requestDraft);
+    const drafted = await getDraft(state.form, state.tone, todayIST(), requestDraft, state.waiver);
     if (drafted) dispatch({ type: "drafted", subject: drafted.subject, body: drafted.body, source: drafted.source });
     else dispatch({ type: "go", step: "standing" }); // not overdue today: back to the standing screen
   }
@@ -114,6 +114,8 @@ export default function Home() {
         <ToneScreen
           tone={state.tone}
           onSelect={(tone) => dispatch({ type: "setTone", tone })}
+          waiver={state.waiver}
+          onWaiver={(on) => dispatch({ type: "setWaiver", on })}
           onDraft={handleDraft}
           onBack={() => dispatch({ type: "go", step: "standing" })}
         />

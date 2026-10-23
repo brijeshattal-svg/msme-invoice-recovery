@@ -1,4 +1,4 @@
-import { LEGAL_REFERENCES, type FactKey, type Facts } from "./facts";
+import { AVOID_LABELS, LEGAL_REFERENCES, NOT_USED, type FactKey, type Facts } from "./facts";
 
 export type Email = { subject: string; body: string };
 export type CheckResult = {
@@ -107,7 +107,17 @@ export function checkEmail(email: Email, facts: Facts): CheckResult {
 
   // Checked outside the approved strings, so a client really named "Courtyard Notice Media" (which
   // the founder confirmed) does not fail every draft; the model's own words are still checked.
-  const forbidden = [...new Set((leftovers.match(FORBIDDEN) ?? []).map((w) => w.toLowerCase()))];
+  // Things this particular email must leave out (tone rules in factsForTone): a gentle check-in
+  // has no interest figure, total or basis sentence and never says "interest"; without a chosen
+  // waiver, no waiver wording. Words are checked outside the approved strings, so a client named
+  // "Interest Global" is not a problem.
+  const avoidedFigures = (facts.avoid ?? [])
+    .filter((k) => facts.strings[k] && text.includes(facts.strings[k]))
+    .map((k) => `${AVOID_LABELS[k] ?? k} ${NOT_USED}`);
+  const avoidedWords = (facts.avoidWords ?? [])
+    .filter((w) => new RegExp(`\\b${w}\\b`, "i").test(leftovers))
+    .map((w) => `the word "${w}" ${NOT_USED}`);
+  const forbidden = [...new Set([...(leftovers.match(FORBIDDEN) ?? []).map((w) => w.toLowerCase()), ...avoidedFigures, ...avoidedWords])];
   const misplaced = findMisplaced(`${email.subject}\n${email.body}`, facts);
 
   return {

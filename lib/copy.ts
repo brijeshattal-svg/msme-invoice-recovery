@@ -109,6 +109,10 @@ export const STANDING = {
 export const EMAIL = {
   toneTitle: "Pick a tone",
   toneHelp: "You can change it and redraft any time.",
+  waiverLabel: (days: number) => `Offer to waive the interest if they pay within ${days} days`,
+  waiverHelp:
+    "Your decision, not ours. Only switch this on if you would really do it. The email will say you will gladly waive the interest accrued so far if payment reaches you by the date shown in it. You can still edit the email.",
+  waiverOff: "The gentle check-in doesn't mention interest, so there is nothing to waive.",
   draftButton: "Draft my email",
   sendTitle: "Send it yourself",
   sendSub: "Read it, edit it, send it from your own email.",

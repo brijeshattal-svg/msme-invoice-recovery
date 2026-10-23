@@ -29,9 +29,25 @@ export type FactKey =
   | "interest"
   | "totalDue"
   | "interestBasis"
-  | "replyByDate";
+  | "replyByDate"
+  | "waiverOffer";
 
-export type Facts = { strings: Record<FactKey, string>; required: FactKey[] };
+export type Facts = {
+  strings: Record<FactKey, string>;
+  required: FactKey[];
+  /** Fact strings this email must NOT contain (e.g. the interest figure in a gentle check-in). */
+  avoid?: FactKey[];
+  /** Words this email must not contain, outside the approved strings (e.g. "waive" when no waiver was chosen). */
+  avoidWords?: string[];
+};
+
+/** Suffix on every checker message about something this particular email must leave out. */
+export const NOT_USED = "(not used in this email)";
+export const AVOID_LABELS: Partial<Record<FactKey, string>> = {
+  interest: "the interest figure",
+  totalDue: "the total now due",
+  interestBasis: "the interest basis sentence",
+};
 
 export type FactsInput = { clientName: string; invoiceNumber: string; invoiceDate: string; amount: number };
 export type Overdue = Extract<EngineResult, { status: "overdue" }>;
@@ -69,13 +85,44 @@ export function buildFacts(input: FactsInput, r: Overdue, asOf?: string): Facts 
       totalDue: formatINR(r.totalDue),
       interestBasis: INTEREST_BASIS,
       replyByDate: asOf ? formatDate(addDays(asOf, REPLY_BY_DAYS)) : "",
+      waiverOffer: "",
     },
     required: REQUIRED,
   };
 }
 
-/** The tone decides whether the reply-by date must appear (only the last reminder states one). */
-export function factsForTone(facts: Facts, tone: Tone): Facts {
-  if (tone !== "lastReminder" || !facts.strings.replyByDate) return facts;
-  return { ...facts, required: [...facts.required, "replyByDate"] };
+export type ToneOptions = {
+  /** The founder chose to offer waiving the interest if paid by the reply-by date. */
+  waiver?: boolean;
+};
+
+/**
+ * Per-tone rules on top of the base facts:
+ * - "checkin" never mentions interest: the interest figure, total due and interest basis are not
+ *   required and are rejected if they appear, and so is the word "interest";
+ * - "lastReminder" must state the reply-by date;
+ * - a waiver offer (founder's choice, never the AI's) adds one fixed approved sentence that must
+ *   appear verbatim; when no waiver was chosen, any waiver wording is rejected, so a model cannot
+ *   invent a concession.
+ */
+export function factsForTone(facts: Facts, tone: Tone, opts: ToneOptions = {}): Facts {
+  const strings = { ...facts.strings };
+  let required = [...facts.required];
+  const avoid: FactKey[] = [];
+  const avoidWords: string[] = [];
+
+  if (tone === "checkin") {
+    required = required.filter((k) => k !== "totalDue" && k !== "interest");
+    avoid.push("interest", "totalDue", "interestBasis");
+    avoidWords.push("interest");
+  }
+  if (tone !== "checkin" && opts.waiver && strings.replyByDate && strings.interest) {
+    strings.waiverOffer = `If payment reaches us by ${strings.replyByDate}, I will gladly waive the interest accrued so far, ${strings.interest}.`;
+    required.push("waiverOffer");
+  } else {
+    avoidWords.push("waive", "waived", "waiver", "waiving");
+  }
+  if (tone === "lastReminder" && strings.replyByDate) required.push("replyByDate");
+
+  return { strings, required, avoid, avoidWords };
 }

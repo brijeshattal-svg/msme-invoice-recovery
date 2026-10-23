@@ -39,6 +39,8 @@ export type DraftState = {
 export type State = {
   step: Step;
   tone: Tone;
+  /** Offer to waive the interest if they pay by the reply-by date (founder's choice, off by default). */
+  waiver: boolean;
   draft: DraftState;
   upload: "idle" | "reading" | "error";
   error: string | null;
@@ -71,6 +73,7 @@ const emptyDraft: DraftState = { status: "idle", subject: "", body: "", source: 
 export const initialState: State = {
   step: "upload",
   tone: "friendly",
+  waiver: false,
   draft: emptyDraft,
   upload: "idle",
   error: null,
@@ -92,6 +95,7 @@ export type Action =
   | { type: "eligibility"; field: keyof Eligibility; value: string }
   | { type: "go"; step: Step }
   | { type: "setTone"; tone: Tone }
+  | { type: "setWaiver"; on: boolean }
   | { type: "draftLoading" }
   | { type: "drafted"; subject: string; body: string; source: "ai" | "template" }
   | { type: "editDraft"; field: "subject" | "body"; value: string }
@@ -161,6 +165,8 @@ export function reducer(s: State, a: Action): State {
       return { ...s, eligibility: { ...s.eligibility, [a.field]: a.value } as Eligibility };
     case "go":
       return { ...s, step: a.step };
+    case "setWaiver":
+      return { ...s, waiver: a.on };
     case "setTone":
       return { ...s, tone: a.tone };
     case "draftLoading":

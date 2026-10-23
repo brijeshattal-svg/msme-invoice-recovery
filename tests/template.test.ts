@@ -19,9 +19,16 @@ const scenarios = {
 describe("deterministic templates", () => {
   for (const [name, facts] of Object.entries(scenarios)) {
     describe(name, () => {
-      it.each(TONE_IDS)("%s tone always passes the number check", (tone) => {
-        const email = buildTemplate(facts, tone);
-        expect(checkEmail(email, facts)).toEqual({ ok: true, missing: [], strayNumbers: [], leakedNames: [], forbidden: [], misplaced: [] });
+      it.each(TONE_IDS)("%s tone always passes the number check (under its own tone rules)", (tone) => {
+        const toned = factsForTone(facts, tone);
+        const email = buildTemplate(toned, tone);
+        expect(checkEmail(email, toned)).toEqual({ ok: true, missing: [], strayNumbers: [], leakedNames: [], forbidden: [], misplaced: [] });
+      });
+
+      it.each(TONE_IDS)("%s tone with the waiver offer on also passes", (tone) => {
+        const toned = factsForTone(facts, tone, { waiver: true });
+        const email = buildTemplate(toned, tone);
+        expect(checkEmail(email, toned).ok).toBe(true);
       });
     });
   }
@@ -29,8 +36,9 @@ describe("deterministic templates", () => {
   it("uses every required fact verbatim in every tone", () => {
     const facts = scenarios["60 days overdue"];
     for (const tone of TONE_IDS) {
-      const { body } = buildTemplate(facts, tone);
-      for (const k of facts.required) expect(body, `${tone}/${k}`).toContain(facts.strings[k]);
+      const toned = factsForTone(facts, tone);
+      const { body } = buildTemplate(toned, tone);
+      for (const k of toned.required) expect(body, `${tone}/${k}`).toContain(toned.strings[k]);
     }
   });
 
@@ -55,8 +63,8 @@ describe("deterministic templates", () => {
       expect(body, tone).toContain("MSME Form-1");
       expect(body, tone).toMatch(/as we understand it/);
       expect(body, tone).toMatch(/may not be able to claim/);
-      // the heads-up comes before the money facts
-      expect(body.indexOf("Section 43B(h)"), tone).toBeLessThan(body.indexOf(scenarios["60 days overdue"].strings.totalDue));
+      // the heads-up comes before the money facts (the invoice amount is in every tone, even the check-in)
+      expect(body.indexOf("Section 43B(h)"), tone).toBeLessThan(body.indexOf(scenarios["60 days overdue"].strings.amount));
     }
   });
 

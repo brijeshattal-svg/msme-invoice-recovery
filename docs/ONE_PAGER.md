@@ -9,14 +9,14 @@ Small Indian service businesses (agencies, consultants, IT and design studios) w
 - writing a firm-but-polite email with exact figures takes time they don't have.
 
 ## What we built
-Photo or PDF of an overdue invoice → AI reads it → the founder confirms → plain code works out the legal due date, days overdue and interest, month by month → founder picks one of six tones written for Indian services businesses → AI drafts the email → **code checks every number** → founder copies it, opens it in their own mail app, or copies a short WhatsApp version. A follow-up plan suggests day 7 and day 15 reminders. About two minutes end to end.
+Photo or PDF of an overdue invoice → AI reads it → the founder confirms → plain code works out the legal due date, days overdue and interest, month by month → founder picks one of seven tones written for Indian services businesses → AI drafts the email → **code checks every number** → founder copies it, opens it in their own mail app, or copies a short WhatsApp version. A follow-up plan suggests day 7 and day 15 reminders. About two minutes end to end.
 
 ## Why it's different
 | | Interest calculators | Invoice-financing platforms | FortyFive |
 |---|---|---|---|
 | Works out the interest | Yes | No | Yes, matched against CalcGuru on 3 cases (one paisa apart on a 7-month case) |
 | Reads the invoice for you | No | Onboarding needed | Yes (AI, founder confirms) |
-| Writes the message | No | No | Six relationship-aware tones, email and WhatsApp |
+| Writes the message | No | No | Seven relationship-aware tones (one with no interest at all), an optional waiver offer, email and WhatsApp |
 | Stops the AI inventing figures | n/a | n/a | Every digit, number word and figure placement is checked in code |
 | Signup | Varies | KYC, login | None; nothing stored |
 

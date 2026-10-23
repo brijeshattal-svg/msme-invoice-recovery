@@ -1,9 +1,9 @@
-export type Tone = "relationship" | "friendly" | "firm" | "finance" | "formal" | "lastReminder";
-export const TONE_IDS: Tone[] = ["relationship", "friendly", "firm", "finance", "formal", "lastReminder"];
+export type Tone = "relationship" | "checkin" | "friendly" | "firm" | "finance" | "formal" | "lastReminder";
+export const TONE_IDS: Tone[] = ["relationship", "checkin", "friendly", "firm", "finance", "formal", "lastReminder"];
 
 // Two groups of three on the tone screen (F2). Ids friendly/firm/formal are unchanged.
 export const TONE_GROUPS: { title: string; ids: Tone[] }[] = [
-  { title: "Keep the relationship warm", ids: ["relationship", "friendly", "firm"] },
+  { title: "Keep the relationship warm", ids: ["relationship", "checkin", "friendly", "firm"] },
   { title: "For finance teams and later reminders", ids: ["finance", "formal", "lastReminder"] },
 ];
 
@@ -18,6 +18,13 @@ export const TONES: Record<Tone, { label: string; when: string; preview: string;
     preview: "“Thank you for the work we've done together. This has probably slipped through…”",
     style:
       "Warm and grateful, written by a founder to a long-standing or retainer client. Thank them for the work together, assume an honest oversight on their side, and ask simply for an expected payment date. Short, personal sentences. Greet the team; no individual's name is known.",
+  },
+  checkin: {
+    label: "Gentle check-in",
+    when: "You'd rather not mention interest yet, just find out where things stand.",
+    preview: "“Just checking in on where this stands…”",
+    style:
+      "A light, low-pressure check-in from a founder who simply wants to know where the payment stands and whether anything is holding it up. State the invoice number, invoice date, amount, due date and how many days overdue, and ask when the payment can be expected. Do NOT mention interest, the interest basis, the total now due, or any concession. No pressure and no deadline. Greet the finance team; no individual's name is known.",
   },
   friendly: {
     label: "Friendly",

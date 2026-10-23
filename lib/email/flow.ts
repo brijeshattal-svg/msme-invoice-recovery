@@ -15,6 +15,8 @@ export type DraftPayload = {
   agreementDays: number | null;
   udyamDate: string;
   tone: Tone;
+  /** The founder chose to offer waiving the interest (never applies to the gentle check-in). */
+  waiver?: boolean;
 };
 export type ServerDraft = { subject: string; body: string; source: "ai" | "template" };
 export type DraftFetcher = (payload: DraftPayload) => Promise<ServerDraft>;
@@ -31,7 +33,7 @@ export function factsFromForm(form: FormValues, today: string): Facts | null {
   );
 }
 
-export function payloadFromForm(form: FormValues, tone: Tone): DraftPayload {
+export function payloadFromForm(form: FormValues, tone: Tone, waiver = false): DraftPayload {
   const e = toEngineInput(form, "");
   return {
     clientName: form.clientName,
@@ -42,6 +44,7 @@ export function payloadFromForm(form: FormValues, tone: Tone): DraftPayload {
     agreementDays: e.agreementDays,
     udyamDate: form.udyamDate,
     tone,
+    ...(waiver ? { waiver: true } : {}),
   };
 }
 
@@ -56,12 +59,13 @@ export async function getDraft(
   tone: Tone,
   today: string,
   fetchDraft: DraftFetcher,
+  waiver = false,
 ): Promise<Drafted | null> {
   const base = factsFromForm(form, today);
   if (!base) return null;
-  const facts = factsForTone(base, tone);
+  const facts = factsForTone(base, tone, { waiver });
   try {
-    const d = await fetchDraft(payloadFromForm(form, tone));
+    const d = await fetchDraft(payloadFromForm(form, tone, waiver));
     if (checkEmail(d, facts).ok) return { subject: d.subject, body: d.body, source: d.source, facts };
   } catch {
     // network error, rate limit, server error: fall through to the template

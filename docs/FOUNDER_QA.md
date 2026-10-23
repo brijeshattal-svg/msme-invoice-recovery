@@ -12,7 +12,7 @@ FortyFive helps a founder of a micro or small service business who has a late in
 
 What we built to make sending easier and safer:
 - **Interest is framed as "may be owed", never a threat,** and every email opens with the *client's* tax angle (as we understand it, Section 43B(h) of the Income-tax Act, 1961, now Section 37(2)(g) of the 2025 Act: a buyer may not be able to claim a deduction for dues to micro and small suppliers until paid). That is a helpful, non-adversarial reason to pay.
-- **Six tones**, including *Relationship-first* for retainer clients, plus a *Last friendly reminder* with a reply-by date.
+- **Seven tones**, including *Relationship-first* for retainer clients, a *Gentle check-in* that never mentions interest, and a *Last friendly reminder* with a reply-by date. An optional **interest-waiver offer** (the founder's choice, off by default) can be added to any tone that mentions interest.
 - **The founder controls everything.** Nothing is sent automatically. The email is editable.
 - **Blocker Assistant:** often the real reason for non-payment is a PO, vendor code or approval, not unwillingness. The app finds it from the client's reply and drafts a practical, polite response.
 
