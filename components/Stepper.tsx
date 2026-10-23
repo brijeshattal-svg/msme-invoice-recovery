@@ -10,7 +10,8 @@ export function Stepper({ current }: { current: Step }) {
   const text = COPY.stepOf(n, STEPS.length);
   return (
     <header className="glass sticky top-0 z-20 border-b border-line">
-      <div className="mx-auto flex h-14 max-w-3xl items-center gap-3 px-5">
+      {/* Must fit a 360px phone: there the step reads "1/5" (the full text stays for screen readers). */}
+      <div className="mx-auto flex h-14 max-w-3xl items-center gap-2 px-4 sm:gap-3 sm:px-5">
         <span className="flex items-center gap-2 whitespace-nowrap text-lg font-bold tracking-tight">
           <span aria-hidden className="grid h-7 w-7 place-items-center rounded-lg bg-brand-700 text-xs font-extrabold text-on-brand">
             45
@@ -18,7 +19,10 @@ export function Stepper({ current }: { current: Step }) {
           FortyFive
         </span>
         <span className="num ml-auto whitespace-nowrap text-sm text-muted" aria-live="polite">
-          {text}
+          <span className="max-[420px]:sr-only">{text}</span>
+          <span aria-hidden className="min-[421px]:hidden">
+            {n}/{STEPS.length}
+          </span>
         </span>
         <Link href="/toolkit" className="min-h-11 content-center whitespace-nowrap rounded-full px-2 text-sm font-semibold text-link hover:bg-brand-50">
           {TOOLKIT.link}
