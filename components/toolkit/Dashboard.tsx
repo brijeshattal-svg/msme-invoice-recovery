@@ -137,7 +137,7 @@ export function Dashboard() {
             cta={C.plan}
             tone={forecast?.shortfall ? "alert" : "neutral"}
           />
-          <Action title={C.pCheck} body={C.pCheckBody} href="/" cta={C.start} />
+          <Action title={C.pCheck} body={C.pCheckBody} href="/check" cta={C.start} />
         </div>
       </section>
 

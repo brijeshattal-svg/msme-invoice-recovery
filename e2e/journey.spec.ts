@@ -84,7 +84,7 @@ test.describe("Quick Check: the core journey", () => {
 
   test("form mistakes are explained, not silently accepted", async ({ page }) => {
     await setup(page);
-    await page.goto("/");
+    await page.goto("/check");
     await page.getByRole("button", { name: "Enter details manually" }).click();
     await page.getByRole("button", { name: "Check what I may be owed" }).click();
     await expect(page.getByText(/Please fix \d+ things? below/)).toBeVisible();
@@ -118,7 +118,7 @@ test.describe("waiting on the AI", () => {
         },
       });
     });
-    await page.goto("/");
+    await page.goto("/check");
     await page.getByRole("button", { name: /Try the sample/ }).click();
     await expect(page.getByText(/Reading your invoice/)).toBeVisible();
     const manual = page.getByRole("button", { name: "Enter details manually" });
@@ -175,7 +175,7 @@ test.describe("part payments and TDS", () => {
         },
       }),
     );
-    await page.goto("/");
+    await page.goto("/check");
     await page.getByRole("button", { name: /Try the sample/ }).click();
     await expect(page.getByText(/Your invoice shows ₹50,000\.00 already paid/)).toBeVisible();
     await expect(page.getByLabel("Date received")).toHaveValue("2026-07-25");

@@ -198,3 +198,35 @@ label:has(input:checked) .tone-title::after {
   content: "  ✓";
   color: var(--brand-700);
 }
+
+/* ---- Landing page ("/"): motion only; colours come from the tokens above. ---- */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Hero cards drift a few pixels, like Apple's product shots. */
+@keyframes drift {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+.float { animation: drift 7s ease-in-out infinite; }
+.float-slow { animation: drift 9s ease-in-out infinite reverse; }
+
+/* Sections rise into view as they scroll in. Only where the browser supports scroll-driven
+   animation; elsewhere the content is simply there. Never hides content from a screen reader. */
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(36px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+@supports (animation-timeline: view()) {
+  .reveal {
+    animation: reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 26%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .float, .float-slow, .reveal { animation: none; }
+}

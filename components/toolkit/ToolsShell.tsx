@@ -53,7 +53,7 @@ export function ToolsShell({ children }: { children: ReactNode }) {
           <Logo />
         </div>
         <Link
-          href="/"
+          href="/check"
           className="mt-6 flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-700 px-3 text-sm font-semibold text-on-brand hover:bg-brand-800"
         >
           <Icon name="check" />
@@ -95,7 +95,7 @@ export function ToolsShell({ children }: { children: ReactNode }) {
             <span className="hidden rounded-full border border-line bg-surface px-3 py-1 text-xs font-medium text-muted sm:inline-block lg:ml-0">
               {TOOLKIT.memoryPill}
             </span>
-            <Link href="/" className="ml-auto min-h-11 content-center whitespace-nowrap rounded-full px-3 text-sm font-semibold text-link hover:bg-brand-50">
+            <Link href="/check" className="ml-auto min-h-11 content-center whitespace-nowrap rounded-full px-3 text-sm font-semibold text-link hover:bg-brand-50">
               {TOOLKIT.backToCheck}
             </Link>
             <Help />

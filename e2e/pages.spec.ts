@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { noHorizontalScroll, setup } from "./helpers";
 
-const PAGES = ["/", "/toolkit", "/blockers", "/priorities", "/cash", "/reports", "/privacy"];
+const PAGES = ["/", "/check", "/toolkit", "/blockers", "/priorities", "/cash", "/reports", "/privacy"];
 
 test.describe("every page", () => {
   for (const path of PAGES) {
@@ -36,16 +36,18 @@ test.describe("every page", () => {
     }
     await expect(page.getByText(/Not legal, tax or financial advice/)).toBeVisible();
     await page.getByRole("link", { name: /Back to Quick Check/ }).click();
-    await expect(page).toHaveURL(/\/$/);
+    await expect(page).toHaveURL(/\/check$/);
   });
 
-  test("the landing links to the privacy page, and an unknown URL gets a friendly 404", async ({ page }) => {
+  test("the landing links to the privacy page, and an unknown URL gets a friendly 404 with a way back", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("link", { name: "Privacy and terms" }).first().click();
     await expect(page).toHaveURL(/\/privacy$/);
     const res = await page.goto("/no-such-page");
     expect(res?.status()).toBe(404);
     await expect(page.getByText("We couldn't find that page")).toBeVisible();
+    await page.getByRole("link", { name: "Check an invoice" }).click();
+    await expect(page).toHaveURL(/\/check$/);
   });
 });
 

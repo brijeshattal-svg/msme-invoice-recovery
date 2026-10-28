@@ -589,3 +589,107 @@ export const PAYMENTS = {
   paidColumn: "Paid",
   howPayments: "A payment reduces the amount that interest runs on from the day it was received. TDS counts as received.",
 } as const;
+
+// Landing page at "/" (Quick Check lives at "/check"). Hedged and honest: no invented statistics,
+// no testimonials, no promise a client will pay. Every figure on the page comes from compute().
+export const LANDING = {
+  nav: {
+    how: "How it works",
+    features: "What you get",
+    faq: "Questions",
+    cta: "Check an invoice",
+    label: "Main",
+  },
+  hero: {
+    eyebrow: "The 45-day rule, on your side.",
+    line1: "Your client is late.",
+    line2: "Here's what you may be owed.",
+    sub: "Upload an overdue invoice. In about two minutes you'll see whether it's late under the law, how much interest may be owed, and have one polite email that keeps the client.",
+    cta: "Check an invoice",
+    secondary: "See how it works",
+    proof: ["No login", "Nothing stored", "You press send"],
+    sampleLabel: "Sample: a fictional invoice, worked out by the app's calculator",
+    sampleTag: "Sample",
+    owedLabel: "interest may be owed so far",
+    readChip: "Read from your invoice",
+    checkedChip: "Numbers checked against your calculation",
+    emailTo: "Draft email",
+  },
+  why: {
+    eyebrow: "The law already sides with you",
+    title: "Most founders never ask.",
+    body: "Under the MSMED Act, 2006, a buyer should pay a micro or small supplier within 15 days of accepting the work, or within the days agreed in writing, never more than 45. Late payments may attract compound interest at three times the RBI Bank Rate. Almost nobody uses it, for three honest reasons.",
+    reasons: [
+      { title: "The maths is awkward", body: "Monthly rests, rate changes mid-month, a 365-day year. Nobody works it out by hand." },
+      { title: "The relationship matters", body: "You depend on this client. Sending a \"you owe me interest\" email feels like picking a fight." },
+      { title: "There's no time", body: "A firm but polite email with exact figures takes an hour you don't have." },
+    ],
+  },
+  how: {
+    eyebrow: "How it works",
+    title: "From a late invoice to a sent message in two minutes.",
+    steps: [
+      { n: "1", title: "Upload", body: "A PDF or a photo. AI reads the client, invoice number, date and amount. You check every field, and anything it's unsure about is flagged." },
+      { n: "2", title: "See where you stand", body: "Plain code, not AI, works out the due date, the days late and the interest that may be owed. Open the working, month by month." },
+      { n: "3", title: "Send it yourself", body: "Pick a tone and get a polite draft. Code checks every number in it. Copy it, open it in your own email, or copy a short WhatsApp version." },
+    ],
+  },
+  features: {
+    eyebrow: "What you get",
+    title: "Exact where it matters. Human where it counts.",
+    maths: {
+      title: "Code does the maths. Not AI.",
+      body: "The due date, the days late and the interest come from plain, tested code. Open the working and check it yourself.",
+      cols: ["Month", "Days", "Interest"],
+    },
+    checked: {
+      title: "Every number in the email is checked.",
+      body: "AI writes the draft. Code rejects any figure that didn't come from your calculation, any number written in words, and any threat. If a draft fails, you get a standard one with the same checked figures.",
+    },
+    tones: {
+      title: "Seven tones, written for Indian businesses.",
+      body: "From relationship-first for retainer clients to a finance-team version with a clean paper trail. The gentle check-in never mentions interest at all.",
+    },
+    privacy: {
+      title: "No login. Nothing stored.",
+      body: "No account, no database. Your invoice goes to Google's AI only to be read, and is gone when you close the tab.",
+      big: "0",
+      bigLabel: "accounts, databases or saved files",
+    },
+    payments: {
+      title: "Part payments and TDS.",
+      body: "Already received something, or did the client deduct TDS? Enter it, and interest runs only on what was still unpaid.",
+    },
+    tools: {
+      title: "More than one late invoice?",
+      body: "Rank who to chase first, find what is blocking a payment, forecast the next 30 days and download an ageing report.",
+      cta: "See the tools",
+    },
+  },
+  band: {
+    line1: "Calculators tell you the number.",
+    line2: "FortyFive gets you to a sent message.",
+    sub: "Without making you the bad guy.",
+  },
+  limits: {
+    eyebrow: "Honest limits",
+    title: "What it won't do.",
+    items: [
+      { title: "It isn't legal advice", body: "It works out what may be owed and drafts a message. You decide what to send. For a dispute, talk to a lawyer or a chartered accountant." },
+      { title: "It never sends anything", body: "You copy the email and send it yourself. Nothing is sent to your client, ever, and nothing is scheduled." },
+      { title: "It can't verify your facts", body: "Your Udyam date, the acceptance date and any written agreement are taken as you enter them." },
+      { title: "It covers micro and small enterprises", body: "Registered on Udyam, selling to buyers in India. Rates are updated by hand after each RBI decision, and the app shows the date they were last checked." },
+    ],
+  },
+  faq: { eyebrow: "Questions", title: "Good questions, plain answers." },
+  final: {
+    title: "Check your first invoice.",
+    sub: "Two minutes. No login. Nothing stored.",
+    cta: "Check an invoice",
+    tools: "Explore the tools",
+  },
+  footer: {
+    disclaimer: "Not legal advice. Calculates and drafts; you decide what to send.",
+    links: { check: "Check an invoice", tools: "More tools", privacy: "Privacy and terms" },
+  },
+} as const;

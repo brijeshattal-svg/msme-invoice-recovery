@@ -46,7 +46,8 @@ describe("workspace pages", () => {
     const current = html.match(/<a [^>]*aria-current="page"[^>]*>/g) ?? [];
     expect(current).toHaveLength(2);
     for (const tag of current) expect(tag).toContain(`href="${t.href}"`);
-    expect(html).toContain('href="/"');
+    expect(html).toContain('href="/"'); // the wordmark goes to the landing page
+    expect(html).toContain('href="/check"');
     expect(html).toContain(TOOLKIT.newCheck);
     expect(html).toContain(TOOLKIT.memoryNote);
   });

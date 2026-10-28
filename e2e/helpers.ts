@@ -27,7 +27,7 @@ export async function setup(page: Page, opts: { draft?: "down" } = {}) {
 
 /** From the landing page to the "Where you stand" screen using the sample invoice. */
 export async function reachResult(page: Page) {
-  await page.goto("/");
+  await page.goto("/check");
   await page.getByRole("button", { name: /Try the sample/ }).click();
   await expect(page.getByRole("heading", { name: "Check the details" })).toBeVisible();
   await page.getByLabel("Udyam registration date").fill("2024-01-15");
@@ -37,7 +37,7 @@ export async function reachResult(page: Page) {
 
 /** Manual entry of the sample invoice's details (no file, no AI). */
 export async function enterByHand(page: Page, amount = "236000") {
-  await page.goto("/");
+  await page.goto("/check");
   await page.getByRole("button", { name: "Enter details manually" }).click();
   await page.getByLabel("Client name").fill("Northwind Test Industries Pvt Ltd");
   await page.getByLabel("Invoice number").fill("BDS/2026/0142");
