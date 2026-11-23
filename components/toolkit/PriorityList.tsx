@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PRIORITIES_COPY as C } from "@/lib/copy";
+import { ACCOUNT, PRIORITIES_COPY as C } from "@/lib/copy";
 import { formatDate, formatINR } from "@/lib/format";
 import { HISTORY_NOTE, rankClients, SCORE_FORMULA } from "@/lib/intel/priority";
 import { todayIST } from "@/lib/today";
@@ -14,7 +14,12 @@ import { useToolkit } from "./state";
 
 /** Priorities page: ranked clients (pure, tested logic in lib/intel/priority.ts) plus the editable list. */
 export function PriorityList() {
-  const { invoices, loadSample, clear, fromQuickCheck } = useToolkit();
+  const { invoices, loadSample, clear, fromQuickCheck, account } = useToolkit();
+  // Signed in, "Clear all" also deletes the saved list: ask first.
+  const clearAll = () => {
+    if (account.user && invoices.some((i) => !i.sample) && !window.confirm(ACCOUNT.clearSavedConfirm)) return;
+    clear();
+  };
   const [today] = useState(() => todayIST());
   const { ranked, clear: clearClients } = rankClients(invoices, today);
   const hasSample = invoices.some((i) => i.sample);
@@ -36,7 +41,7 @@ export function PriorityList() {
             {C.loadSample}
           </Button>
           {invoices.length > 0 && (
-            <Button variant="link" tone="muted" onClick={clear}>
+            <Button variant="link" tone="muted" onClick={clearAll}>
               {C.clearAll}
             </Button>
           )}

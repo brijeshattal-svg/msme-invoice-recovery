@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { PRIVACY, TOOLKIT, type ToolId } from "@/lib/copy";
+import { ACCOUNT, PRIVACY, TOOLKIT, type ToolId } from "@/lib/copy";
+import { AccountChip } from "./Account";
+import { useToolkit } from "./state";
 import { Help } from "../Help";
 import { cx } from "../ui/cx";
 
@@ -31,7 +33,8 @@ function Logo({ light = false }: { light?: boolean }) {
       <span aria-hidden className="grid h-7 w-7 place-items-center rounded-lg bg-brand-700 text-xs font-extrabold text-on-brand">
         45
       </span>
-      FortyFive
+      {/* Below 420px only the mark shows, so the header fits a 360px phone with the account link. */}
+      <span className="max-[420px]:sr-only">FortyFive</span>
     </Link>
   );
 }
@@ -45,6 +48,7 @@ export function ToolsShell({ children }: { children: ReactNode }) {
   const path = usePathname();
   const isCurrent = (id: ToolId) => path === TOOLKIT.tools[id].href;
   const allIds = TOOLKIT.sections.flatMap((s) => s.items) as ToolId[];
+  const signedIn = useToolkit().account.user !== null;
 
   return (
     <div className="flex min-h-screen w-full text-ink">
@@ -83,7 +87,7 @@ export function ToolsShell({ children }: { children: ReactNode }) {
             </div>
           ))}
         </nav>
-        <p className="mt-auto px-2 pt-4 text-xs leading-5 text-muted">{TOOLKIT.memoryNote}</p>
+        <p className="mt-auto px-2 pt-4 text-xs leading-5 text-muted">{signedIn ? ACCOUNT.memoryNoteSignedIn : TOOLKIT.memoryNote}</p>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
@@ -93,9 +97,12 @@ export function ToolsShell({ children }: { children: ReactNode }) {
               <Logo />
             </div>
             <span className="hidden rounded-full border border-line bg-surface px-3 py-1 text-xs font-medium text-muted sm:inline-block lg:ml-0">
-              {TOOLKIT.memoryPill}
+              {signedIn ? ACCOUNT.memoryPillSignedIn : TOOLKIT.memoryPill}
             </span>
-            <Link href="/check" className="ml-auto min-h-11 content-center whitespace-nowrap rounded-full px-3 text-sm font-semibold text-link hover:bg-brand-50">
+            <div className="ml-auto">
+              <AccountChip />
+            </div>
+            <Link href="/check" className="min-h-11 content-center whitespace-nowrap rounded-full px-3 text-sm font-semibold text-link hover:bg-brand-50">
               {TOOLKIT.backToCheck}
             </Link>
             <Help />

@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { noHorizontalScroll, setup } from "./helpers";
 
-const PAGES = ["/", "/check", "/toolkit", "/blockers", "/priorities", "/cash", "/reports", "/privacy"];
+const PAGES = ["/", "/check", "/toolkit", "/blockers", "/priorities", "/cash", "/reports", "/privacy", "/account"];
 
 test.describe("every page", () => {
   for (const path of PAGES) {
