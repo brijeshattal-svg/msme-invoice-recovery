@@ -652,7 +652,7 @@ export const LANDING = {
     },
     privacy: {
       title: "No login. Nothing stored.",
-      body: "No account, no database. Your invoice goes to Google's AI only to be read, and is gone when you close the tab.",
+      body: "No account, no database: this app keeps nothing, and your work is gone when you close the tab. To be read, your invoice is sent to Google's AI, whose own terms apply.",
       big: "0",
       bigLabel: "accounts, databases or saved files",
     },
