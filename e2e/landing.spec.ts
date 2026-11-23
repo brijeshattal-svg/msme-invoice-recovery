@@ -78,4 +78,36 @@ test.describe("landing page (/)", () => {
     expect(names.length).toBeGreaterThan(3);
     expect(new Set(names)).toEqual(new Set(["none"]));
   });
+
+  test("contact form: checks fields, sends once, confirms, and explains failures", async ({ page }) => {
+    let posts = 0;
+    let body: Record<string, string> = {};
+    await page.route("**/api/contact", async (r) => {
+      posts++;
+      body = r.request().postDataJSON();
+      await r.fulfill({ json: { ok: true } });
+    });
+    await page.goto("/#contact");
+    const send = page.getByRole("button", { name: "Send message" });
+    await send.click();
+    await expect(page.getByText("Enter your name.")).toBeVisible();
+    await expect(page.getByText("Enter a valid email address.")).toBeVisible();
+    expect(posts).toBe(0);
+    await page.getByLabel("Your name").fill("Asha Rao");
+    await page.getByLabel("Your email").fill("asha@example.com");
+    await page.getByLabel("Your message").fill("Does the 45-day rule apply to retainers?");
+    await send.click();
+    await expect(page.getByText(/Your message reached us/)).toBeVisible();
+    expect(posts).toBe(1);
+    expect(body).toEqual({ name: "Asha Rao", email: "asha@example.com", message: "Does the 45-day rule apply to retainers?", website: "" });
+    await expect(page.getByLabel("Your message")).toHaveValue("");
+
+    await page.unroute("**/api/contact");
+    await page.route("**/api/contact", (r) => r.fulfill({ status: 429, json: { error: "rate_limited" } }));
+    await page.getByLabel("Your name").fill("Asha");
+    await page.getByLabel("Your email").fill("asha@example.com");
+    await page.getByLabel("Your message").fill("Again");
+    await send.click();
+    await expect(page.getByText(/Too many messages/)).toBeVisible();
+  });
 });

@@ -508,7 +508,7 @@ export const PRIVACY = {
   updated: "Last reviewed 23 Nov 2026.",
   summaryTitle: "In short",
   summary: [
-    "No login needed. Without an account we keep nothing: not your invoice, the details or the email.",
+    "No login needed. Checking an invoice keeps nothing: not your invoice, the details or the email.",
     "An account is optional. It saves only your invoice list for the tools pages, and you can delete it at any time.",
     "To read the invoice and write the email, what you send goes to Google's Gemini AI service.",
     "Everything you see lives in this browser tab and is gone when you close or refresh it.",
@@ -541,6 +541,12 @@ export const PRIVACY = {
     "We never save invoice files, what the AI read from them, client replies, email drafts or your cash forecast.",
     "Only you can read your list: the database refuses every other account. Sample invoices are never saved.",
     "On your account page you can delete your saved list, or your whole account and everything in it, at any time. Signing out removes the list from the screen.",
+  ],
+  contactTitle: "If you use the contact form",
+  contact: [
+    "We save your name, email address and message in our database (Supabase), so we can reply. Nobody can read them through the website; only the FortyFive team can, in the database dashboard.",
+    "Your message is emailed to the FortyFive team through Gmail, and you get one automatic confirmation email. We don't add you to any mailing list.",
+    "To have your message deleted, write to us through the same form and ask.",
   ],
   aiTitle: "Google, our AI provider",
   aiPaid:
@@ -745,4 +751,27 @@ export const ACCOUNT = {
   clearSavedConfirm: "This also deletes every invoice saved to your account. Continue?",
   memoryNoteSignedIn: "Your invoice list is saved to your account. Cash forecast inputs stay in this tab only.",
   memoryPillSignedIn: "Saved to your account",
+} as const;
+
+// Landing page contact form (lib/contact.ts, /api/contact).
+export const CONTACT = {
+  navLink: "Contact",
+  eyebrow: "Contact",
+  title: "Questions? Write to us.",
+  sub: "Ask anything about FortyFive or the 45-day rule. We reply by email, and you'll get an automatic confirmation straight away.",
+  nameLabel: "Your name",
+  emailLabel: "Your email",
+  messageLabel: "Your message",
+  messageHelp: "Please don't include invoice details or anything confidential.",
+  send: "Send message",
+  sending: "Sending...",
+  sent: "Thank you. Your message reached us, and a confirmation is on its way to your inbox.",
+  errors: {
+    name: "Enter your name.",
+    email: "Enter a valid email address.",
+    message: "Write a message (up to 2,000 characters).",
+    rate_limited: "Too many messages from this connection just now. Please try again in a few minutes.",
+    failed: "We couldn't send your message just now. Please try again in a minute.",
+  },
+  note: "We save your name, email and message so we can reply, and email them to the FortyFive team. See Privacy and terms.",
 } as const;

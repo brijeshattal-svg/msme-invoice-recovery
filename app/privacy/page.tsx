@@ -62,6 +62,10 @@ export default function PrivacyPage() {
         <List items={P.not} />
       </Section>
 
+      <Section title={P.contactTitle}>
+        <List items={P.contact} />
+      </Section>
+
       <Section title={P.accountTitle}>
         <List items={P.account} />
       </Section>

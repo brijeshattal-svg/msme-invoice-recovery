@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { LandingFooter, LandingNav } from "@/components/landing/Chrome";
 import { Hero } from "@/components/landing/Hero";
+import { Contact } from "@/components/landing/Contact";
 import { Band, Faq, FinalCta, Features, How, Limits, Why } from "@/components/landing/Sections";
 import { COPY } from "@/lib/copy";
 
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-/** The front door. Quick Check (the working app) lives at /check. Static: no data, no state. */
+/** The front door. Quick Check (the working app) lives at /check. Static, apart from the contact form. */
 export default function LandingPage() {
   return (
     <>
@@ -23,6 +24,7 @@ export default function LandingPage() {
         <Band />
         <Limits />
         <Faq />
+        <Contact />
         <FinalCta />
       </main>
       <LandingFooter />

@@ -46,7 +46,7 @@ describe("landing page figures come from the engine, never from typing", () => {
 describe("landing page structure and honesty", () => {
   it("one h1, an h2 per section, and a sample label so it can't be mistaken for the visitor's own figures", () => {
     expect(html.match(/<h1/g)).toHaveLength(1);
-    expect(html.match(/<h2/g)).toHaveLength(6); // the dark statement band is a statement, not a heading
+    expect(html.match(/<h2/g)).toHaveLength(7); // incl. the contact form; the dark statement band is a statement, not a heading
     expect(text(html)).toContain(LANDING.hero.sampleTag);
     expect(html).toContain(`aria-label="${LANDING.hero.sampleLabel.replace(/'/g, "&#x27;")}"`);
   });
@@ -77,7 +77,9 @@ describe("landing page structure and honesty", () => {
     expect(html.match(/<details/g)!.length).toBeGreaterThanOrEqual(6);
   });
 
-  it("is static: no data, forms or file inputs on the landing", () => {
-    expect(html).not.toMatch(/<form|<input|type="file"/);
+  it("the only form is the contact form (no file inputs); everything else is static", () => {
+    expect(html.match(/<form/g)).toHaveLength(1);
+    expect(html).toMatch(/<section id="contact"[\s\S]*<form/);
+    expect(html).not.toContain('type="file"');
   });
 });

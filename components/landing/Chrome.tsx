@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LANDING as L } from "@/lib/copy";
+import { CONTACT, LANDING as L } from "@/lib/copy";
 import { Wordmark, wrap } from "./ui";
 
 /** Translucent sticky header: wordmark, section links (from tablet up) and the one primary action. */
@@ -18,6 +18,9 @@ export function LandingNav() {
           </a>
           <a href="#faq" className={link}>
             {L.nav.faq}
+          </a>
+          <a href="#contact" className={link}>
+            {CONTACT.navLink}
           </a>
         </nav>
         <Link
